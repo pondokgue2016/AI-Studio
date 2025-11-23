@@ -2,6 +2,22 @@ import { GoogleGenAI, Modality, Part } from "@google/genai";
 import { ContentStyle, UploadedFile, UploadedFilesState, CreativePlan } from '../types';
 import { STORY_FLOWS } from '../constants';
 
+// --- API Key Utility ---
+
+const getApiKey = (): string => {
+    // 1. Coba ambil dari process.env (Untuk Google IDX / Node environment)
+    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+        return process.env.API_KEY;
+    }
+    // 2. Coba ambil dari Vite env (Untuk Local Development)
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
+        // @ts-ignore
+        return import.meta.env.VITE_API_KEY;
+    }
+    return '';
+};
+
 // --- File & Audio Utilities ---
 
 /**
@@ -222,7 +238,10 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
 }
 
 export async function getCreativePlan(style: ContentStyle, files: UploadedFilesState, description: string, language: string, scriptStyle: string, orientation: string): Promise<CreativePlan> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("API Key tidak ditemukan. Pastikan Anda telah memilih API Key atau mengatur VITE_API_KEY di .env untuk lokal.");
+    
+    const ai = new GoogleGenAI({ apiKey });
     const langTextMap: { [key: string]: string } = {
         'id-ID': 'Bahasa Indonesia',
         'ms-MY': 'Bahasa Melayu',
@@ -263,7 +282,9 @@ export async function getCreativePlan(style: ContentStyle, files: UploadedFilesS
 }
 
 export async function generateSingleImage(prompt: string, referenceParts: Part[]): Promise<{ success: boolean; base64: string | null }> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("API Key tidak ditemukan.");
+    const ai = new GoogleGenAI({ apiKey });
     try {
         // Add specific instruction to the image model to respect the reference images strongly
         const strongPrompt = `${prompt} (Ensure high fidelity to the key features of the provided reference images. High quality, photorealistic, cinematic)`;
@@ -287,7 +308,9 @@ export async function generateSingleImage(prompt: string, referenceParts: Part[]
 }
 
 export async function getAnimationPrompt(imagePrompt: string): Promise<string | null> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    const apiKey = getApiKey();
+    if (!apiKey) return null;
+    const ai = new GoogleGenAI({ apiKey });
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -301,7 +324,9 @@ export async function getAnimationPrompt(imagePrompt: string): Promise<string | 
 }
 
 export async function translateScript(script: string, targetLangCode: string, scriptStyle: string): Promise<string> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("API Key tidak ditemukan.");
+    const ai = new GoogleGenAI({ apiKey });
     const langTextMap: { [key: string]: string } = {
         'id-ID': 'Bahasa Indonesia',
         'ms-MY': 'Bahasa Melayu',
@@ -316,7 +341,9 @@ export async function translateScript(script: string, targetLangCode: string, sc
 }
 
 export async function generateTTSAudio(script: string, langCode: string, voiceName: string): Promise<Blob> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("API Key tidak ditemukan.");
+    const ai = new GoogleGenAI({ apiKey });
     const ttsPrompt = `Ucapkan dalam bahasa ${langCode}: "${script}"`;
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",

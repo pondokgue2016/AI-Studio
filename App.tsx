@@ -201,8 +201,18 @@ export default function App() {
     // --- Effects ---
     const checkApiKeyStatus = useCallback(async () => {
         try {
-            const hasKey = await window.aistudio.hasSelectedApiKey();
-            setIsKeySelected(hasKey);
+            // Checks if the app is running in the Project IDX / Google AI Studio environment
+            if (typeof window !== 'undefined' && window.aistudio) {
+                const hasKey = await window.aistudio.hasSelectedApiKey();
+                setIsKeySelected(hasKey);
+            } else {
+                // For Local Dev: Check if VITE_API_KEY is defined in env
+                // @ts-ignore
+                const hasLocalKey = typeof import.meta !== 'undefined' && import.meta.env && !!import.meta.env.VITE_API_KEY;
+                // If not found in env, we assume the user might have process.env polyfilled or we simply allow entry 
+                // and let the service throw an error if missing later.
+                setIsKeySelected(hasLocalKey || true); 
+            }
         } catch (error) {
             console.error("Error checking API key status:", error);
             setIsKeySelected(false);
@@ -226,8 +236,12 @@ export default function App() {
     // --- Callbacks & Handlers ---
     const handleSelectKey = async () => {
         try {
-            await window.aistudio.openSelectKey();
-            setIsKeySelected(true);
+            if (window.aistudio) {
+                await window.aistudio.openSelectKey();
+                setIsKeySelected(true);
+            } else {
+                showToast("Pengaturan API Key otomatis hanya tersedia di Google IDX. Untuk lokal, gunakan file .env dengan VITE_API_KEY", "info");
+            }
         } catch (error) {
             console.error("Failed to open select key dialog:", error);
             showToast("Gagal membuka dialog pemilihan kunci.", "error");
@@ -370,7 +384,7 @@ export default function App() {
             console.error("Kesalahan pada proses generasi:", error);
             const errorMessage = error.message || "Terjadi kesalahan yang tidak diketahui.";
              if (errorMessage.includes("permission denied") || errorMessage.includes("Requested entity was not found")) {
-                showToast("Kunci API tidak valid atau izin ditolak. Silakan pilih kunci lagi.", 'error');
+                showToast("Kunci API tidak valid atau izin ditolak. Silakan cek konfigurasi API Key Anda.", 'error');
                 setIsKeySelected(false);
             } else {
                 showToast(`Error: ${errorMessage}`, 'error');
