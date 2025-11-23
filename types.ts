@@ -21,6 +21,7 @@ export interface GeneratedImage {
   success: boolean;
   base64: string | null;
   prompt: string;
+  error?: string;
 }
 
 export interface GeneratedContentState {

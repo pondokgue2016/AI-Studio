@@ -4,12 +4,21 @@ import { STORY_FLOWS } from '../constants';
 
 // --- API Key Utility ---
 
+let localApiKey = '';
+
+export const setLocalApiKey = (key: string) => {
+    localApiKey = key;
+}
+
 const getApiKey = (): string => {
-    // 1. Coba ambil dari process.env (Untuk Google IDX / Node environment)
+    // 1. Prioritaskan Input Manual dari UI
+    if (localApiKey) return localApiKey;
+
+    // 2. Coba ambil dari process.env (Untuk Google IDX / Node environment)
     if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
         return process.env.API_KEY;
     }
-    // 2. Coba ambil dari Vite env (Untuk Local Development)
+    // 3. Coba ambil dari Vite env (Untuk Local Development)
     // @ts-ignore
     if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
         // @ts-ignore
@@ -239,7 +248,7 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
 
 export async function getCreativePlan(style: ContentStyle, files: UploadedFilesState, description: string, language: string, scriptStyle: string, orientation: string): Promise<CreativePlan> {
     const apiKey = getApiKey();
-    if (!apiKey) throw new Error("API Key tidak ditemukan. Pastikan Anda telah memilih API Key atau mengatur VITE_API_KEY di .env untuk lokal.");
+    if (!apiKey) throw new Error("API Key tidak ditemukan. Pastikan Anda telah memasukkan API Key.");
     
     const ai = new GoogleGenAI({ apiKey });
     const langTextMap: { [key: string]: string } = {
@@ -281,9 +290,10 @@ export async function getCreativePlan(style: ContentStyle, files: UploadedFilesS
     }
 }
 
-export async function generateSingleImage(prompt: string, referenceParts: Part[]): Promise<{ success: boolean; base64: string | null }> {
+export async function generateSingleImage(prompt: string, referenceParts: Part[]): Promise<{ success: boolean; base64: string | null; error?: string }> {
     const apiKey = getApiKey();
-    if (!apiKey) throw new Error("API Key tidak ditemukan.");
+    if (!apiKey) return { success: false, base64: null, error: "API Key Missing" };
+    
     const ai = new GoogleGenAI({ apiKey });
     try {
         // Add specific instruction to the image model to respect the reference images strongly
@@ -300,10 +310,10 @@ export async function generateSingleImage(prompt: string, referenceParts: Part[]
                 return { success: true, base64: part.inlineData.data };
             }
         }
-        return { success: false, base64: null };
-    } catch (error) {
+        return { success: false, base64: null, error: "No image data in response" };
+    } catch (error: any) {
         console.error("Error generating single image:", error);
-        return { success: false, base64: null };
+        return { success: false, base64: null, error: error.message || "Unknown Error" };
     }
 }
 

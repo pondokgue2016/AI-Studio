@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { CONTENT_STYLES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_MULTIPLE_FILES, TTS_VOICES, SCRIPT_STYLES, LANGUAGES, ORIENTATIONS } from './constants';
 import { ContentStyle, GeneratedContentState, ToastMessage, UploadedFile, UploadedFilesState, GeneratedImage, ScriptStyle } from './types';
@@ -197,6 +196,7 @@ export default function App() {
     const [videoPlatform, setVideoPlatform] = useState<'desktop' | 'mobile'>('desktop');
     const [isKeySelected, setIsKeySelected] = useState(false);
     const [isCheckingKey, setIsCheckingKey] = useState(true);
+    const [manualKeyInput, setManualKeyInput] = useState('');
 
     // --- Effects ---
     const checkApiKeyStatus = useCallback(async () => {
@@ -209,9 +209,11 @@ export default function App() {
                 // For Local Dev: Check if VITE_API_KEY is defined in env
                 // @ts-ignore
                 const hasLocalKey = typeof import.meta !== 'undefined' && import.meta.env && !!import.meta.env.VITE_API_KEY;
-                // If not found in env, we assume the user might have process.env polyfilled or we simply allow entry 
-                // and let the service throw an error if missing later.
-                setIsKeySelected(hasLocalKey || true); 
+                // If not found in env, we still allow entry if user manually inputs key later, 
+                // but strictly speaking we mark as 'not selected' initially unless found.
+                // However, the original logic passed 'true' to skip blocking. 
+                // Now we want to BLOCK if no key found, to show the input screen.
+                setIsKeySelected(!!hasLocalKey); 
             }
         } catch (error) {
             console.error("Error checking API key status:", error);
@@ -239,8 +241,6 @@ export default function App() {
             if (window.aistudio) {
                 await window.aistudio.openSelectKey();
                 setIsKeySelected(true);
-            } else {
-                showToast("Pengaturan API Key otomatis hanya tersedia di Google IDX. Untuk lokal, gunakan file .env dengan VITE_API_KEY", "info");
             }
         } catch (error) {
             console.error("Failed to open select key dialog:", error);
@@ -248,6 +248,16 @@ export default function App() {
         }
     };
     
+    const handleManualKeySubmit = () => {
+        if (manualKeyInput.trim().length < 10) {
+            showToast("Format API Key tidak valid.", 'error');
+            return;
+        }
+        GeminiService.setLocalApiKey(manualKeyInput.trim());
+        setIsKeySelected(true);
+        showToast("API Key berhasil disimpan.", 'success');
+    };
+
     const showToast = useCallback((message: string, type: ToastMessage['type'] = 'info') => {
         const id = Date.now();
         setToasts(prev => [...prev, { id, message, type }]);
@@ -349,9 +359,19 @@ export default function App() {
             
             const images = await Promise.all(imagePromises);
             
+            // Check for specific API errors
+            const failure = images.find(img => !img.success);
+            if (failure && failure.error) {
+                // If the error seems critical (auth), rethrow it
+                if (failure.error.includes("403") || failure.error.includes("API Key")) {
+                    throw new Error("API Key tidak valid atau kedaluwarsa.");
+                }
+            }
+
             const successfulImages = images.filter(img => img.success);
             if (successfulImages.length === 0) {
-                throw new Error("Gagal membuat semua gambar. Silakan coba lagi.");
+                 const firstError = failure?.error || "Unknown Error";
+                throw new Error(`Gagal membuat semua gambar. Detail: ${firstError}`);
             }
 
             setLoadingMessage("Membuat saran animasi secara paralel...");
@@ -383,8 +403,8 @@ export default function App() {
         } catch (error: any) {
             console.error("Kesalahan pada proses generasi:", error);
             const errorMessage = error.message || "Terjadi kesalahan yang tidak diketahui.";
-             if (errorMessage.includes("permission denied") || errorMessage.includes("Requested entity was not found")) {
-                showToast("Kunci API tidak valid atau izin ditolak. Silakan cek konfigurasi API Key Anda.", 'error');
+             if (errorMessage.includes("permission denied") || errorMessage.includes("Requested entity was not found") || errorMessage.includes("API Key")) {
+                showToast("Kunci API tidak valid atau izin ditolak. Silakan cek Key Anda.", 'error');
                 setIsKeySelected(false);
             } else {
                 showToast(`Error: ${errorMessage}`, 'error');
@@ -527,16 +547,42 @@ export default function App() {
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-md w-full p-8 text-center">
                     <KeyIcon />
                     <h2 className="text-2xl font-bold text-gray-900 mb-3">API Key Diperlukan</h2>
-                    <p className="text-gray-600 mb-6">
-                        Untuk menggunakan fitur canggih seperti pembuatan gambar dan audio (TTS), Anda perlu memilih API Key Anda. Ini memastikan otorisasi dan penagihan yang tepat.
+                    <p className="text-gray-600 mb-6 text-sm">
+                        Untuk menggunakan fitur canggih seperti pembuatan gambar dan audio (TTS), Anda perlu API Key.
                     </p>
-                    <button 
-                        onClick={handleSelectKey}
-                        className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-all transform hover:scale-[1.02] shadow-md hover:shadow-lg"
-                    >
-                        Pilih API Key
-                    </button>
-                     <p className="text-xs text-gray-500 mt-4">
+                    
+                    {/* Google IDX Logic */}
+                     {typeof window !== 'undefined' && window.aistudio ? (
+                        <button 
+                            onClick={handleSelectKey}
+                            className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-all transform hover:scale-[1.02] shadow-md hover:shadow-lg mb-4"
+                        >
+                            Pilih API Key (Google Account)
+                        </button>
+                    ) : (
+                        /* Localhost Logic */
+                        <div className="space-y-4">
+                            <div className="text-left">
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Input Manual (Localhost)</label>
+                                <input 
+                                    type="password" 
+                                    value={manualKeyInput}
+                                    onChange={(e) => setManualKeyInput(e.target.value)}
+                                    placeholder="Paste Gemini API Key Anda disini..."
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                />
+                            </div>
+                            <button 
+                                onClick={handleManualKeySubmit}
+                                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-4 rounded-lg text-lg transition-all shadow-md"
+                            >
+                                Simpan Key
+                            </button>
+                             <p className="text-xs text-gray-400 mt-2">Key hanya disimpan sementara di browser Anda.</p>
+                        </div>
+                    )}
+                    
+                     <p className="text-xs text-gray-500 mt-6 border-t pt-4 border-gray-100">
                         Dengan melanjutkan, Anda setuju pada <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-600">ketentuan penagihan Google AI</a>.
                     </p>
                 </div>
@@ -765,7 +811,10 @@ export default function App() {
                                                                 {generatedContent.animationPrompts[index] && <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8"><p className="text-white text-xs font-medium leading-tight line-clamp-3">🎥 {generatedContent.animationPrompts[index]}</p></div>}
                                                             </>
                                                         ) : (
-                                                            <div className="flex items-center justify-center h-full border-2 border-dashed border-red-300 bg-red-50 text-center text-red-500 p-4 text-sm font-medium"><span>Gagal Membuat Gambar</span></div>
+                                                            <div className="flex flex-col items-center justify-center h-full border-2 border-dashed border-red-300 bg-red-50 text-center text-red-500 p-2">
+                                                                <span className="font-bold text-xs mb-1">Gagal</span>
+                                                                <span className="text-[10px] leading-tight px-1">{image.error || "Unknown error"}</span>
+                                                            </div>
                                                         )}
                                                     </div>
                                                     {image.success && (
