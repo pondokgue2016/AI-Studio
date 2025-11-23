@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EngagePro AI Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              'brand-blue': '#3b82f6',
+              'brand-green': '#10b981',
+              'brand-red': '#ef4444',
+              'gray-50': '#f9fafb',
+              'gray-100': '#f3f4f6',
+              'gray-200': '#e5e7eb',
+              'gray-300': '#d1d5db',
+              'gray-600': '#4b5563',
+              'gray-700': '#374151',
+              'gray-800': '#1f2937', 
+              'gray-900': '#111827',
+            },
+            keyframes: {
+              toastIn: {
+                '0%': { transform: 'translateX(100%)', opacity: '0' },
+                '100%': { transform: 'translateX(0)', opacity: '1' },
+              },
+              toastOut: {
+                '0%': { transform: 'translateX(0)', opacity: '1' },
+                '100%': { transform: 'translateX(100%)', opacity: '0' },
+              }
+            },
+            animation: {
+              toastIn: 'toastIn 0.5s ease-out forwards',
+              toastOut: 'toastOut 0.5s ease-in forwards',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Custom Scrollbar - Modern Light Mode */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d1d5db; /* gray-300 */
+        border-radius: 10px;
+        border: 2px solid #f9fafb; /* border creates padding effect */
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af; /* gray-400 */
+      }
+      body {
+        background-color: #f9fafb; /* gray-50 */
+        color: #111827; /* gray-900 */
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
