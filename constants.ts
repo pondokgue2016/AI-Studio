@@ -1,14 +1,15 @@
+
 import { ContentStyle, ScriptStyle } from './types';
 
-export const CONTENT_STYLES: { id: ContentStyle; name: string }[] = [
-    { id: 'direct', name: 'Presentasi' },
-    { id: 'quick_review', name: 'Review Cepat' },
-    { id: 'treadmill_fashion_show', name: 'Treadmill Fashion Show' },
-    { id: 'fashion_broll', name: 'Fashion B-Roll Poses' },
-    { id: 'travel', name: 'Promo Travel' },
-    { id: 'property', name: 'Promo Properti' },
-    { id: 'aesthetic_hands_on', name: 'Konten Estetika (Hands-On)' },
-    { id: 'food_promo', name: 'Promo Makanan (Food)' },
+export const CONTENT_STYLES: { id: ContentStyle; name: string; description: string }[] = [
+    { id: 'direct', name: 'Presentasi Produk', description: 'Fokus pada solusi & manfaat produk.' },
+    { id: 'quick_review', name: 'Review Cepat', description: 'Testimoni singkat & padat.' },
+    { id: 'treadmill_fashion_show', name: 'Treadmill Fashion', description: 'Model berjalan estetik.' },
+    { id: 'fashion_broll', name: 'Fashion B-Roll', description: 'Pose variatif untuk outfit.' },
+    { id: 'travel', name: 'Promo Travel', description: 'Eksplorasi lokasi & suasana.' },
+    { id: 'property', name: 'Promo Properti', description: 'Tur ruangan & arsitektur.' },
+    { id: 'aesthetic_hands_on', name: 'Aesthetic POV', description: 'Sudut pandang tangan (POV).' },
+    { id: 'food_promo', name: 'Food Vlogger', description: 'Review makanan menggugah selera.' },
 ];
 
 export const SCRIPT_STYLES: { id: ScriptStyle; name: string }[] = [
