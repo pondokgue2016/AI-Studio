@@ -314,11 +314,14 @@ export default function App() {
         setAudioUrl(null);
     };
 
-    const startGenerationProcess = useCallback(async () => {
+    const isApiKeyAvailable = useMemo(() => {
         // @ts-ignore
         const hasViteKey = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY;
+        return !!(userProfile.apiKey || hasViteKey);
+    }, [userProfile.apiKey]);
 
-        if (!userProfile.apiKey && !hasViteKey) {
+    const startGenerationProcess = useCallback(async () => {
+        if (!isApiKeyAvailable) {
              showToast("API Key belum diatur. Silakan ke menu Pengaturan.", 'error');
              setCurrentView('settings');
              return;
@@ -431,7 +434,7 @@ export default function App() {
             setIsLoading(false);
             setLoadingMessage('');
         }
-    }, [selectedStyle, uploadedFiles, description, travelDescription, language, scriptStyle, orientation, showToast, userProfile.apiKey]);
+    }, [selectedStyle, uploadedFiles, description, travelDescription, language, scriptStyle, orientation, showToast, isApiKeyAvailable]);
     
     const handleTranslate = async () => {
         if (!script) return;
@@ -911,13 +914,20 @@ export default function App() {
                              currentView === 'settings' ? 'Kelola preferensi dan API Key Anda.' : 'Pusat bantuan dan tutorial.'}
                         </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    
+                    {/* Dynamic API Status */}
+                    <button 
+                        onClick={() => !isApiKeyAvailable && setCurrentView('settings')}
+                        className={`flex items-center gap-3 px-3 py-1.5 rounded-lg transition-colors ${!isApiKeyAvailable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default'}`}
+                    >
                         <span className="flex h-3 w-3 relative">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isApiKeyAvailable ? 'bg-green-400' : 'bg-red-400'}`}></span>
+                          <span className={`relative inline-flex rounded-full h-3 w-3 ${isApiKeyAvailable ? 'bg-green-500' : 'bg-red-500'}`}></span>
                         </span>
-                        <span className="text-sm text-gray-500 font-medium">API Ready</span>
-                    </div>
+                        <span className={`text-sm font-medium ${isApiKeyAvailable ? 'text-gray-500' : 'text-red-500'}`}>
+                            {isApiKeyAvailable ? 'API Ready' : 'Set API Key'}
+                        </span>
+                    </button>
                 </div>
 
                 {/* Main Viewport */}
