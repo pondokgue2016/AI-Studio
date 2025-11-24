@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { CONTENT_STYLES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_MULTIPLE_FILES, TTS_VOICES, SCRIPT_STYLES, LANGUAGES, ORIENTATIONS, APP_VERSION } from './constants';
 import { ContentStyle, GeneratedContentState, ToastMessage, UploadedFile, UploadedFilesState, GeneratedImage, ScriptStyle, AppView, UserProfile } from './types';
@@ -394,40 +393,62 @@ export default function App() {
             
             const promptsToGenerate = plan.shotPrompts;
             
-            setLoadingMessage(`Membuat semua gambar secara paralel...`);
+            // --- NEW: Sequential Logic for Free Tier Safety ---
+            // Instead of Promise.all, we use a loop with delay.
             
-            let imagePromises: Promise<GeneratedImage>[];
+            const images: GeneratedImage[] = [];
+            const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
             if (selectedStyle === 'treadmill_fashion_show') {
                 if (uploadedFiles.fashionItems.length === 0) {
                     throw new Error("Silakan unggah setidaknya satu 'Fashion Item'.");
                 }
-                imagePromises = uploadedFiles.fashionItems.map(async (item) => {
+                
+                for (let i = 0; i < uploadedFiles.fashionItems.length; i++) {
+                    const item = uploadedFiles.fashionItems[i];
+                    setLoadingMessage(`Membuat gambar ${i + 1} dari ${uploadedFiles.fashionItems.length} (Antrian Aman)...`);
+
                     const referenceParts: Part[] = [{ text: `Aset Utama (Item Fashion):` }, { inlineData: { mimeType: item.type, data: item.data }}];
                     if (uploadedFiles.background) referenceParts.push({ text: "Gambar Latar:" }, { inlineData: { mimeType: uploadedFiles.background.type, data: uploadedFiles.background.data }});
                     if (uploadedFiles.model) referenceParts.push({ text: "Foto Model (Referensi Pose/Orang):" }, { inlineData: { mimeType: uploadedFiles.model.type, data: uploadedFiles.model.data }});
                     
-                    const result = await GeminiService.generateSingleImage(promptsToGenerate[0], referenceParts);
-                    return { ...result, prompt: promptsToGenerate[0] };
-                });
+                    try {
+                        const result = await GeminiService.generateSingleImage(promptsToGenerate[0], referenceParts);
+                        images.push({ ...result, prompt: promptsToGenerate[0] });
+                    } catch (e) {
+                         images.push({ success: false, base64: null, prompt: promptsToGenerate[0], error: "Generation failed" });
+                    }
+
+                    // Delay to prevent Rate Limit (429) on Free Tier
+                    if (i < uploadedFiles.fashionItems.length - 1) await delay(3000); 
+                }
 
             } else {
-                 imagePromises = promptsToGenerate.map(async (prompt, index) => {
+                 for (let i = 0; i < promptsToGenerate.length; i++) {
+                    const prompt = promptsToGenerate[i];
+                    setLoadingMessage(`Membuat gambar ${i + 1} dari ${promptsToGenerate.length} (Antrian Aman)...`);
+
                     const referenceParts: Part[] = []; 
                     if (uploadedFiles.product) referenceParts.push({ text: "Aset Utama (Produk):" }, { inlineData: { mimeType: uploadedFiles.product.type, data: uploadedFiles.product.data }});
                     uploadedFiles.locations.forEach(l => referenceParts.push({ text: `Aset Utama (Lokasi/Properti/Makanan):` }, { inlineData: { mimeType: l.type, data: l.data }}));
-                    const isFoodShot2 = selectedStyle === 'food_promo' && index === 1;
+                    
+                    const isFoodShot2 = selectedStyle === 'food_promo' && i === 1;
                     if (!isFoodShot2 && uploadedFiles.model) {
                          referenceParts.push({ text: "Foto Model (Referensi Pose/Orang):" }, { inlineData: { mimeType: uploadedFiles.model.type, data: uploadedFiles.model.data }});
                     }
                     if (uploadedFiles.background) referenceParts.push({ text: "Gambar Latar:" }, { inlineData: { mimeType: uploadedFiles.background.type, data: uploadedFiles.background.data }});
 
-                    const result = await GeminiService.generateSingleImage(prompt, referenceParts);
-                    return { ...result, prompt };
-                });
+                    try {
+                        const result = await GeminiService.generateSingleImage(prompt, referenceParts);
+                        images.push({ ...result, prompt });
+                    } catch (e) {
+                         images.push({ success: false, base64: null, prompt, error: "Generation failed" });
+                    }
+
+                    // Delay to prevent Rate Limit (429) on Free Tier
+                    if (i < promptsToGenerate.length - 1) await delay(3000);
+                }
             }
-            
-            const images = await Promise.all(imagePromises);
             
             const failure = images.find(img => !img.success);
             if (failure && failure.error) {
@@ -442,7 +463,7 @@ export default function App() {
                 throw new Error(`Gagal membuat semua gambar. Detail: ${firstError}`);
             }
 
-            setLoadingMessage("Membuat saran animasi secara paralel...");
+            setLoadingMessage("Membuat saran animasi...");
             
             const animationPromises = images.map(image => {
                 if (image.success) {
