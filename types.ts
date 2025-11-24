@@ -1,5 +1,14 @@
+
 export type ContentStyle = 'direct' | 'quick_review' | 'fashion_broll' | 'travel' | 'property' | 'treadmill_fashion_show' | 'aesthetic_hands_on' | 'food_promo';
 export type ScriptStyle = 'direct' | 'poetic' | 'absurd' | 'informative' | 'humorous' | 'mysterious';
+
+export type AppView = 'dashboard' | 'settings' | 'help';
+
+export interface UserProfile {
+    name: string;
+    plan: 'Free' | 'Pro' | 'Enterprise';
+    apiKey: string;
+}
 
 export interface UploadedFile {
   name: string;

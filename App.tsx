@@ -1,6 +1,7 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { CONTENT_STYLES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_MULTIPLE_FILES, TTS_VOICES, SCRIPT_STYLES, LANGUAGES, ORIENTATIONS } from './constants';
-import { ContentStyle, GeneratedContentState, ToastMessage, UploadedFile, UploadedFilesState, GeneratedImage, ScriptStyle } from './types';
+import { ContentStyle, GeneratedContentState, ToastMessage, UploadedFile, UploadedFilesState, GeneratedImage, ScriptStyle, AppView, UserProfile } from './types';
 import * as GeminiService from './services/geminiService';
 import { Part } from '@google/genai';
 
@@ -15,7 +16,7 @@ declare global {
     var aistudio: AIStudio;
 }
 
-// --- SVG Icons (Clean & Modern) ---
+// --- Icons ---
 const SpinnerIcon = () => (
     <svg className="animate-spin h-6 w-6 text-indigo-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -31,12 +32,29 @@ const CloseIcon = () => (
     <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
 );
 
-const KeyIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-indigo-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H5v-2H3v-2H1v-4a6 6 0 0110.257-4.257M15 7A2 2 0 0013 5M15 7a2 2 0 012 2m0 0A2 2 0 0115 9m2-2a2 2 0 00-2-2" />
-    </svg>
+const MenuIcon = () => (
+    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
 );
 
+const DashboardIcon = () => (
+    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+);
+
+const SettingsIcon = () => (
+    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+);
+
+const HelpIcon = () => (
+    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+);
+
+const DownloadIconSmall = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+);
+
+const VideoIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+);
 
 // --- Child Components ---
 
@@ -47,15 +65,23 @@ interface StyleCardProps {
 }
 const StyleCard: React.FC<StyleCardProps> = ({ styleInfo, isSelected, onSelect }) => (
     <div
-        className={`p-5 rounded-xl border transition-all duration-300 cursor-pointer ${
+        className={`p-4 rounded-xl border transition-all duration-300 cursor-pointer ${
             isSelected 
             ? 'bg-white border-indigo-500 shadow-md ring-1 ring-indigo-500 transform scale-[1.02]' 
             : 'bg-white/80 border-gray-200 hover:border-indigo-300 hover:bg-white hover:shadow-md'
         }`}
         onClick={() => onSelect(styleInfo.id)}
     >
-        <div className={`w-full h-2 rounded-full mb-3 ${isSelected ? 'bg-gradient-to-r from-indigo-500 to-blue-500' : 'bg-gray-100'}`}></div>
-        <h3 className={`font-semibold text-center ${isSelected ? 'text-indigo-900' : 'text-gray-700'}`}>{styleInfo.name}</h3>
+        <div className={`w-full h-1.5 rounded-full mb-3 ${isSelected ? 'bg-gradient-to-r from-indigo-500 to-blue-500' : 'bg-gray-100'}`}></div>
+        <h3 className={`font-semibold text-sm ${isSelected ? 'text-indigo-900' : 'text-gray-700'}`}>{styleInfo.name}</h3>
+        <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+            {styleInfo.id === 'direct' ? 'Fokus pada solusi & manfaat produk.' : 
+             styleInfo.id === 'travel' ? 'Eksplorasi lokasi & suasana.' : 
+             styleInfo.id === 'aesthetic_hands_on' ? 'Sudut pandang tangan (POV).' :
+             styleInfo.id === 'treadmill_fashion_show' ? 'Model berjalan estetik.' :
+             styleInfo.id === 'fashion_broll' ? 'Pose variatif untuk outfit.' :
+             'Konten viral siap pakai.'}
+        </p>
     </div>
 );
 
@@ -131,12 +157,12 @@ const FileInput: React.FC<FileInputProps> = ({ id, label, files, onFilesChange, 
 
     return (
         <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">{label}</label>
+            <label className="block text-xs uppercase font-bold text-gray-500 tracking-wider">{label}</label>
             <div
-                className={`group rounded-xl p-8 text-center cursor-pointer border-2 border-dashed transition-all duration-300 ${
+                className={`group rounded-xl p-6 text-center cursor-pointer border border-dashed transition-all duration-300 ${
                     isDragOver 
                     ? 'border-indigo-500 bg-indigo-50' 
-                    : 'border-gray-200 bg-gray-50/50 hover:bg-white hover:border-indigo-300 hover:shadow-sm'
+                    : 'border-gray-300 bg-white hover:border-indigo-400 hover:bg-gray-50'
                 }`}
                 onDrop={handleDrop}
                 onDragEnter={handleDragEvents}
@@ -144,23 +170,21 @@ const FileInput: React.FC<FileInputProps> = ({ id, label, files, onFilesChange, 
                 onDragLeave={handleDragEvents}
                 onClick={() => document.getElementById(`file-input-${id}`)?.click()}
             >
-                <div className="flex flex-col items-center justify-center space-y-3">
-                    <div className={`p-3 rounded-full transition-colors ${isDragOver ? 'bg-indigo-100 text-indigo-600' : 'bg-white text-gray-400 shadow-sm group-hover:text-indigo-500 group-hover:scale-110 transform duration-300'}`}>
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    </div>
-                    <span className="text-sm text-gray-500">Drag & drop atau <span className="text-indigo-600 font-semibold hover:underline">klik untuk upload</span></span>
+                <div className="flex flex-col items-center justify-center space-y-2">
+                    <svg className={`w-8 h-8 transition-colors ${isDragOver ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <span className="text-xs text-gray-500">Drag & drop atau <span className="text-indigo-600 font-semibold hover:underline">klik untuk upload</span></span>
                 </div>
                 <input type="file" id={`file-input-${id}`} className="hidden" accept={accept} multiple={multiple} onChange={handleInputChange} />
             </div>
             {filesArray.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-4">
                     {filesArray.map((file, index) => (
-                        <div key={`${file.name}-${index}`} className="relative w-24 h-24 bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 group hover:shadow-md transition-shadow" title={file.name}>
+                        <div key={`${file.name}-${index}`} className="relative w-20 h-20 bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 group hover:shadow-md transition-shadow" title={file.name}>
                             <img src={file.previewUrl} alt={file.name} className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                             <button
                                 onClick={() => onFileRemove(id, index)}
-                                className="absolute top-1 right-1 bg-white/90 text-red-500 rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-50 shadow-sm transition-all opacity-0 group-hover:opacity-100"
+                                className="absolute top-1 right-1 bg-white/90 text-red-500 rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-50 shadow-sm transition-all opacity-0 group-hover:opacity-100"
                             >
                                 &times;
                             </button>
@@ -177,13 +201,25 @@ const FileInput: React.FC<FileInputProps> = ({ id, label, files, onFilesChange, 
 
 export default function App() {
     // --- State ---
+    const [currentView, setCurrentView] = useState<AppView>('dashboard');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    
+    // User Profile State
+    const [userProfile, setUserProfile] = useState<UserProfile>({
+        name: 'Creator',
+        plan: 'Pro',
+        apiKey: ''
+    });
+
+    // Content State
     const [selectedStyle, setSelectedStyle] = useState<ContentStyle | null>(null);
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({ product: null, model: null, background: null, fashionItems: [], locations: [] });
     const [generatedContent, setGeneratedContent] = useState<GeneratedContentState | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
-    const [isWelcomeModalOpen, setWelcomeModalOpen] = useState(false);
+    
+    // Form Inputs
     const [description, setDescription] = useState('');
     const [travelDescription, setTravelDescription] = useState('');
     const [language, setLanguage] = useState('id-ID');
@@ -194,69 +230,37 @@ export default function App() {
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
     const [isVideoModalOpen, setVideoModalOpen] = useState(false);
     const [videoPlatform, setVideoPlatform] = useState<'desktop' | 'mobile'>('desktop');
-    const [isKeySelected, setIsKeySelected] = useState(false);
-    const [isCheckingKey, setIsCheckingKey] = useState(true);
-    const [manualKeyInput, setManualKeyInput] = useState('');
 
     // --- Effects ---
-    const checkApiKeyStatus = useCallback(async () => {
-        try {
-            // Checks if the app is running in the Project IDX / Google AI Studio environment
-            if (typeof window !== 'undefined' && window.aistudio) {
-                const hasKey = await window.aistudio.hasSelectedApiKey();
-                setIsKeySelected(hasKey);
-            } else {
-                // For Local Dev: Check if VITE_API_KEY is defined in env
-                // @ts-ignore
-                const hasLocalKey = typeof import.meta !== 'undefined' && import.meta.env && !!import.meta.env.VITE_API_KEY;
-                // If not found in env, we still allow entry if user manually inputs key later, 
-                // but strictly speaking we mark as 'not selected' initially unless found.
-                // However, the original logic passed 'true' to skip blocking. 
-                // Now we want to BLOCK if no key found, to show the input screen.
-                setIsKeySelected(!!hasLocalKey); 
+    
+    // Load User Profile from Local Storage
+    useEffect(() => {
+        const storedProfile = localStorage.getItem('engageProProfile');
+        if (storedProfile) {
+            const parsed = JSON.parse(storedProfile);
+            setUserProfile(parsed);
+            if (parsed.apiKey) GeminiService.setLocalApiKey(parsed.apiKey);
+        } else {
+            // Default check for environment vars if no local profile
+             // @ts-ignore
+             if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
+                 // @ts-ignore
+                GeminiService.setLocalApiKey(import.meta.env.VITE_API_KEY);
             }
-        } catch (error) {
-            console.error("Error checking API key status:", error);
-            setIsKeySelected(false);
-        } finally {
-            setIsCheckingKey(false);
         }
     }, []);
 
+    // Save User Profile to Local Storage when it changes
     useEffect(() => {
-        checkApiKeyStatus();
-        if (!localStorage.getItem('aiDirectorVisited')) {
-            setWelcomeModalOpen(true);
-            localStorage.setItem('aiDirectorVisited', 'true');
-        }
-    }, [checkApiKeyStatus]);
+        localStorage.setItem('engageProProfile', JSON.stringify(userProfile));
+        if (userProfile.apiKey) GeminiService.setLocalApiKey(userProfile.apiKey);
+    }, [userProfile]);
 
     useEffect(() => {
         setScript(generatedContent?.tiktokScript || '');
     }, [generatedContent?.tiktokScript]);
 
     // --- Callbacks & Handlers ---
-    const handleSelectKey = async () => {
-        try {
-            if (window.aistudio) {
-                await window.aistudio.openSelectKey();
-                setIsKeySelected(true);
-            }
-        } catch (error) {
-            console.error("Failed to open select key dialog:", error);
-            showToast("Gagal membuka dialog pemilihan kunci.", "error");
-        }
-    };
-    
-    const handleManualKeySubmit = () => {
-        if (manualKeyInput.trim().length < 10) {
-            showToast("Format API Key tidak valid.", 'error');
-            return;
-        }
-        GeminiService.setLocalApiKey(manualKeyInput.trim());
-        setIsKeySelected(true);
-        showToast("API Key berhasil disimpan.", 'success');
-    };
 
     const showToast = useCallback((message: string, type: ToastMessage['type'] = 'info') => {
         const id = Date.now();
@@ -296,13 +300,21 @@ export default function App() {
         });
     }, []);
 
-
     const resetUI = () => {
         setGeneratedContent(null);
         setAudioUrl(null);
     };
 
     const startGenerationProcess = useCallback(async () => {
+        // @ts-ignore
+        const hasViteKey = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY;
+
+        if (!userProfile.apiKey && !hasViteKey) {
+             showToast("API Key belum diatur. Silakan ke menu Pengaturan.", 'error');
+             setCurrentView('settings');
+             return;
+        }
+
         if (!selectedStyle) {
             showToast("Silakan pilih gaya konten terlebih dahulu.", 'error');
             return;
@@ -359,12 +371,10 @@ export default function App() {
             
             const images = await Promise.all(imagePromises);
             
-            // Check for specific API errors
             const failure = images.find(img => !img.success);
             if (failure && failure.error) {
-                // If the error seems critical (auth), rethrow it
                 if (failure.error.includes("403") || failure.error.includes("API Key")) {
-                    throw new Error("API Key tidak valid atau kedaluwarsa.");
+                    throw new Error("API Key tidak valid atau kedaluwarsa. Periksa pengaturan.");
                 }
             }
 
@@ -403,18 +413,16 @@ export default function App() {
         } catch (error: any) {
             console.error("Kesalahan pada proses generasi:", error);
             const errorMessage = error.message || "Terjadi kesalahan yang tidak diketahui.";
-             if (errorMessage.includes("permission denied") || errorMessage.includes("Requested entity was not found") || errorMessage.includes("API Key")) {
-                showToast("Kunci API tidak valid atau izin ditolak. Silakan cek Key Anda.", 'error');
-                setIsKeySelected(false);
+             if (errorMessage.includes("permission denied") || errorMessage.includes("API Key")) {
+                showToast("Masalah API Key. Silakan cek menu Pengaturan.", 'error');
             } else {
                 showToast(`Error: ${errorMessage}`, 'error');
             }
-            resetUI();
         } finally {
             setIsLoading(false);
             setLoadingMessage('');
         }
-    }, [selectedStyle, uploadedFiles, description, travelDescription, language, scriptStyle, orientation, showToast]);
+    }, [selectedStyle, uploadedFiles, description, travelDescription, language, scriptStyle, orientation, showToast, userProfile.apiKey]);
     
     const handleTranslate = async () => {
         if (!script) return;
@@ -446,6 +454,25 @@ export default function App() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleDownloadSingleImage = (base64Data: string, index: number) => {
+        const link = document.createElement("a");
+        link.href = `data:image/png;base64,${base64Data}`;
+        link.download = `engagepro_shot_${index + 1}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleDownloadAudio = () => {
+        if (!audioUrl) return;
+        const link = document.createElement("a");
+        link.href = audioUrl;
+        link.download = `engagepro_audio.wav`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     const handleDownload = async () => {
@@ -503,10 +530,9 @@ export default function App() {
         }
     };
 
-    // --- Render Logic ---
+    // --- Derived State for Logic ---
     const scriptlessStyles: ContentStyle[] = useMemo(() => ['fashion_broll', 'treadmill_fashion_show', 'aesthetic_hands_on'], []);
     const showScriptSection = selectedStyle && !scriptlessStyles.includes(selectedStyle);
-
     const mainAssetConfig = useMemo(() => {
         if (!selectedStyle) return null;
         switch (selectedStyle) {
@@ -530,349 +556,390 @@ export default function App() {
     const stylesRequiringDescription: (ContentStyle | null)[] = useMemo(() => ['direct', 'quick_review', 'food_promo'], []);
     const stylesRequiringTravelDesc: (ContentStyle | null)[] = useMemo(() => ['travel', 'property'], []);
 
-    if (isCheckingKey) {
-        return (
-            <div className="bg-gray-50 min-h-screen flex items-center justify-center">
-                <div className="flex flex-col items-center justify-center">
-                    <SpinnerIcon />
-                    <p className="text-gray-600 text-lg font-medium mt-6">Memeriksa status API Key...</p>
-                </div>
-            </div>
-        );
-    }
-    
-    if (!isKeySelected) {
-        return (
-            <div className="bg-gradient-to-br from-indigo-50 via-white to-blue-50 min-h-screen flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-md w-full p-8 text-center">
-                    <KeyIcon />
-                    <h2 className="text-2xl font-bold text-gray-900 mb-3">API Key Diperlukan</h2>
-                    <p className="text-gray-600 mb-6 text-sm">
-                        Untuk menggunakan fitur canggih seperti pembuatan gambar dan audio (TTS), Anda perlu API Key.
-                    </p>
-                    
-                    {/* Google IDX Logic */}
-                     {typeof window !== 'undefined' && window.aistudio ? (
-                        <button 
-                            onClick={handleSelectKey}
-                            className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-all transform hover:scale-[1.02] shadow-md hover:shadow-lg mb-4"
-                        >
-                            Pilih API Key (Google Account)
-                        </button>
-                    ) : (
-                        /* Localhost Logic */
-                        <div className="space-y-4">
-                            <div className="text-left">
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Input Manual (Localhost)</label>
-                                <input 
-                                    type="password" 
-                                    value={manualKeyInput}
-                                    onChange={(e) => setManualKeyInput(e.target.value)}
-                                    placeholder="Paste Gemini API Key Anda disini..."
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                                />
-                            </div>
-                            <button 
-                                onClick={handleManualKeySubmit}
-                                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-4 rounded-lg text-lg transition-all shadow-md"
-                            >
-                                Simpan Key
-                            </button>
-                             <p className="text-xs text-gray-400 mt-2">Key hanya disimpan sementara di browser Anda.</p>
-                        </div>
-                    )}
-                    
-                     <p className="text-xs text-gray-500 mt-6 border-t pt-4 border-gray-100">
-                        Dengan melanjutkan, Anda setuju pada <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-600">ketentuan penagihan Google AI</a>.
-                    </p>
-                </div>
-            </div>
-        )
-    }
+    // --- RENDERERS ---
 
-    return (
-        <div className="bg-gradient-to-br from-indigo-50 via-white to-blue-50 text-gray-900 font-sans antialiased min-h-screen selection:bg-indigo-100 selection:text-indigo-700">
-            {isLoading && <div id="loading-overlay" className="fixed inset-0 bg-white/90 backdrop-blur-md flex flex-col items-center justify-center z-50 transition-all">
-                <SpinnerIcon />
-                <p id="loading-message" className="text-gray-800 text-lg font-medium mt-6 text-center px-4 animate-pulse tracking-wide">{loadingMessage}</p>
-            </div>}
-            
-            <div id="toast-container" className="fixed bottom-6 right-6 z-50 space-y-3 w-full max-w-sm">
-                 {toasts.map(toast => (
-                    <div key={toast.id} className={`toast-content w-full bg-white border-l-4 ${toast.type === 'error' ? 'border-red-500' : toast.type === 'success' ? 'border-green-500' : 'border-blue-500'} shadow-xl rounded-r-lg pointer-events-auto overflow-hidden animate-toastIn ring-1 ring-black/5`}>
-                        <div className="p-4">
-                            <div className="flex items-start">
-                                <div className="ml-3 w-0 flex-1 pt-0.5">
-                                    <p className="text-sm font-medium text-gray-900">{toast.message}</p>
-                                </div>
-                            </div>
+    const renderSidebar = () => (
+        <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#111827] text-gray-100 transition-transform duration-300 transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-800">
+                    <div className="flex items-center gap-2">
+                         <div className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white p-1.5 rounded-lg shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
                         </div>
+                        <h1 className="text-lg font-bold tracking-tight">EngagePro AI</h1>
                     </div>
-                 ))}
-            </div>
-
-            {isWelcomeModalOpen && <div id="welcome-modal-overlay" className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-                <div id="welcome-modal-content" className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative border border-gray-100">
-                    <button onClick={() => setWelcomeModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-                       <CloseIcon />
+                    <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
+                        <CloseIcon />
                     </button>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Selamat Datang di EngagePro AI!</h2>
-                    <p className="text-gray-600 mb-6 leading-relaxed">Aplikasi ini membantu Anda membuat aset konten marketing profesional dengan cepat dan mudah.</p>
-                    <div className="flex flex-col gap-3">
-                        <div className="grid grid-cols-2 gap-3">
-                             <a href="https://youtu.be/VLf_9JVS_6I" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm border border-indigo-100">Tutorial (Desktop)</a>
-                             <a href="https://youtu.be/BtZdJQkF-Ro" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold py-2.5 px-4 rounded-lg transition-colors text-sm border border-indigo-100">Tutorial (HP)</a>
+                </div>
+
+                {/* Navigation */}
+                <nav className="flex-1 p-4 space-y-1">
+                    <button
+                        onClick={() => { setCurrentView('dashboard'); setSidebarOpen(false); }}
+                        className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'dashboard' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                    >
+                        <DashboardIcon />
+                        <span className="font-medium">Dashboard</span>
+                    </button>
+                    <button
+                        onClick={() => { setCurrentView('settings'); setSidebarOpen(false); }}
+                        className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'settings' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                    >
+                        <SettingsIcon />
+                        <span className="font-medium">Pengaturan</span>
+                    </button>
+                    <button
+                        onClick={() => { setCurrentView('help'); setSidebarOpen(false); }}
+                        className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'help' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                    >
+                        <HelpIcon />
+                        <span className="font-medium">Bantuan</span>
+                    </button>
+                </nav>
+
+                {/* User Profile Footer */}
+                <div className="p-4 border-t border-gray-800 bg-[#0d121f]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
+                            {userProfile.name.charAt(0).toUpperCase()}
                         </div>
-                         <a href="https://chat.whatsapp.com/FkY95eKqcaQ7PdpE2H8thY?mode=wwt" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-green-50 text-green-700 hover:bg-green-100 font-semibold py-2.5 px-4 rounded-lg transition-colors border border-green-100">Masuk Grup WA</a>
-                         <a href="https://wa.me/6288985584050" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2.5 px-4 rounded-lg transition-colors">Kontak Admin</a>
+                        <div>
+                            <p className="text-sm font-semibold text-white">{userProfile.name}</p>
+                            <p className="text-xs text-indigo-400">{userProfile.plan} Plan</p>
+                        </div>
                     </div>
                 </div>
-            </div>}
+            </div>
+        </aside>
+    );
 
-            {isVideoModalOpen && (
-                <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative border border-gray-100">
-                        <button onClick={() => setVideoModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-                            <CloseIcon />
-                        </button>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">Hasilkan Video</h2>
-                        <p className="text-gray-600 mb-6">Pilih platform Anda. Gunakan prompt animasi yang disarankan sebagai dasar pembuatan video.</p>
-                        
-                        <div className="flex border-b border-gray-200 mb-6">
-                            <button 
-                                onClick={() => setVideoPlatform('desktop')}
-                                className={`px-6 py-3 text-sm font-medium transition-colors relative ${videoPlatform === 'desktop' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
-                            >
-                                Desktop
-                                {videoPlatform === 'desktop' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-t-full"></div>}
-                            </button>
-                            <button 
-                                onClick={() => setVideoPlatform('mobile')}
-                                className={`px-6 py-3 text-sm font-medium transition-colors relative ${videoPlatform === 'mobile' ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
-                            >
-                                Handphone
-                                {videoPlatform === 'mobile' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-t-full"></div>}
-                            </button>
+    const renderDashboard = () => (
+        <div className="lg:grid lg:grid-cols-3 lg:gap-8 animate-toastIn">
+            {/* Left Column: Config */}
+            <div className="lg:col-span-1 space-y-8">
+                <section>
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">Dashboard Konten</h2>
+                    <p className="text-sm text-gray-500 mb-4">Buat aset marketing viral dalam hitungan detik.</p>
+                    
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                         <div className="flex items-center gap-3 mb-4">
+                            <span className="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full inline-flex items-center justify-center text-xs font-bold">1</span>
+                            <h3 className="text-sm font-bold uppercase text-gray-800">Strategi Konten</h3>
+                         </div>
+                        <div className="grid grid-cols-2 gap-2 mb-4">
+                            {CONTENT_STYLES.map(styleInfo => (
+                                <StyleCard key={styleInfo.id} styleInfo={styleInfo} isSelected={selectedStyle === styleInfo.id} onSelect={handleStyleSelect} />
+                            ))}
                         </div>
 
-                        {videoPlatform === 'desktop' && (
-                            <div className="space-y-4">
-                                <h3 className="text-sm uppercase tracking-wide text-gray-500 font-semibold mb-2">Versi Web Browser</h3>
-                                 <a href="https://www.meta.ai/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-white hover:bg-gray-50 text-indigo-700 border border-gray-300 font-medium py-3 px-4 rounded-lg transition-all shadow-sm hover:shadow-md">Buka Meta AI (Web)</a>
-                                 <a href="https://dreamina.capcut.com/ai-tool/home" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-white hover:bg-gray-50 text-indigo-700 border border-gray-300 font-medium py-3 px-4 rounded-lg transition-all shadow-sm hover:shadow-md">Buka Dreamina (Web)</a>
-                            </div>
+                        {selectedStyle && (
+                            <>
+                                <hr className="border-gray-100 my-4"/>
+                                <div className="grid grid-cols-1 gap-3">
+                                     <div>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Orientasi</label>
+                                        <select value={orientation} onChange={e => setOrientation(e.target.value)} className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                                            {ORIENTATIONS.map(orient => <option key={orient.id} value={orient.id}>{orient.name}</option>)}
+                                        </select>
+                                    </div>
+                                    {showScriptSection && (
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">Gaya Naskah</label>
+                                            <select value={scriptStyle} onChange={e => setScriptStyle(e.target.value as ScriptStyle)} className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+                                                {SCRIPT_STYLES.map(style => <option key={style.id} value={style.id}>{style.name}</option>)}
+                                            </select>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="mt-4">
+                                     {stylesRequiringDescription.includes(selectedStyle) && <div className="space-y-1"><label className="block text-xs font-medium text-gray-500">Deskripsi Konten</label><textarea rows={3} value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Jelaskan produk anda..."></textarea></div>}
+                                     {stylesRequiringTravelDesc.includes(selectedStyle) && <div className="space-y-1"><label className="block text-xs font-medium text-gray-500">Deskripsi Lokasi</label><textarea rows={3} value={travelDescription} onChange={e => setTravelDescription(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Jelaskan lokasi/properti..."></textarea></div>}
+                                </div>
+                            </>
                         )}
+                    </div>
+                </section>
+                
+                {selectedStyle && (
+                    <section>
+                         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                             <div className="flex items-center gap-3 mb-4">
+                                <span className="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full inline-flex items-center justify-center text-xs font-bold">2</span>
+                                <h3 className="text-sm font-bold uppercase text-gray-800">Aset Visual</h3>
+                             </div>
+                            
+                            <div className="space-y-4">
+                                {mainAssetConfig && <FileInput {...mainAssetConfig} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
+                                {selectedStyle && !['aesthetic_hands_on'].includes(selectedStyle) && <FileInput id="model" label="Foto Model (Opsional)" files={uploadedFiles.model} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
+                                {selectedStyle && ['fashion_broll', 'treadmill_fashion_show', 'aesthetic_hands_on', 'food_promo'].includes(selectedStyle) && <FileInput id="background" label="Foto Latar (Opsional)" files={uploadedFiles.background} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
+                            </div>
 
-                        {videoPlatform === 'mobile' && (
-                            <div className="space-y-6">
-                                <div>
-                                    <h3 className="text-sm uppercase tracking-wide text-gray-500 font-semibold mb-3">Aplikasi Mobile</h3>
-                                    <div className="space-y-3">
-                                        <a href="https://play.google.com/store/apps/details?id=com.facebook.stella" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-white hover:bg-gray-50 text-indigo-700 border border-gray-300 font-medium py-3 px-4 rounded-lg transition-all shadow-sm hover:shadow-md">Buka Meta AI (App)</a>
-                                        <a href="https://play.google.com/store/apps/details?id=com.lemon.dreamina" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-white hover:bg-gray-50 text-indigo-700 border border-gray-300 font-medium py-3 px-4 rounded-lg transition-all shadow-sm hover:shadow-md">Buka Dreamina (App)</a>
+                            <button onClick={startGenerationProcess} disabled={isLoading} className="mt-6 w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-xl text-md transition-all shadow-md flex items-center justify-center gap-2">
+                                {isLoading && generatedContent === null ? (
+                                    <><div className='animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full'></div> Proses...</>
+                                ) : (
+                                    <><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Generate Magic</>
+                                )}
+                            </button>
+                        </div>
+                    </section>
+                )}
+            </div>
+            
+            {/* Right Column: Results */}
+            <div className="lg:col-span-2 mt-8 lg:mt-0">
+                {!generatedContent ? (
+                    <div className="h-full min-h-[400px] flex items-center justify-center bg-white border border-dashed border-gray-300 rounded-2xl">
+                         <div className="text-center p-8">
+                            <PlaceholderIcon />
+                            <p className="mt-4 text-gray-500 text-sm">Hasil kreatif Anda akan muncul di sini.</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        {/* Visuals */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                             <h3 className="text-sm font-bold uppercase text-gray-700 mb-4">Visual Storyboard</h3>
+                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                {generatedContent.generatedImages.map((image, index) => (
+                                    <div key={index} className="flex flex-col gap-2">
+                                        <div className='bg-gray-50 rounded-lg overflow-hidden relative border border-gray-100 aspect-[9/16] group'>
+                                            {image.success && image.base64 ? (
+                                                <>
+                                                    <img src={`data:image/png;base64,${image.base64}`} alt={`Shot ${index + 1}`} className="w-full h-full object-cover" />
+                                                    <div className="absolute top-2 left-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded-full">Shot {index+1}</div>
+                                                    
+                                                    {/* Individual Image Buttons */}
+                                                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => setVideoModalOpen(true)}
+                                                            className="bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-colors backdrop-blur-sm"
+                                                            title="Buat Video AI"
+                                                        >
+                                                            <VideoIcon />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDownloadSingleImage(image.base64!, index)}
+                                                            className="bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-colors backdrop-blur-sm"
+                                                            title="Download Gambar Ini"
+                                                        >
+                                                            <DownloadIconSmall />
+                                                        </button>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="flex items-center justify-center h-full text-red-400 text-xs">Gagal Load</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                         {/* Script & Audio */}
+                         {showScriptSection && generatedContent.tiktokScript && (
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-sm font-bold uppercase text-gray-700">Naskah & Audio</h3>
+                                    <div className="flex gap-2">
+                                        <select value={ttsVoice} onChange={e => setTtsVoice(e.target.value)} className="bg-gray-50 border border-gray-200 text-xs rounded-lg px-2 py-1 outline-none">
+                                            {TTS_VOICES.map(voice => <option key={voice.value} value={voice.value}>{voice.label}</option>)}
+                                        </select>
+                                        <button onClick={handleTts} disabled={isLoading} className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-1">
+                                            {audioUrl ? <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg> : <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
+                                            Generate Audio
+                                        </button>
                                     </div>
                                 </div>
+                                <textarea rows={4} value={script} onChange={e => setScript(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-indigo-500 outline-none leading-relaxed"></textarea>
+                                
+                                {audioUrl && (
+                                    <div className="flex items-center gap-2 mt-3">
+                                        <audio controls src={audioUrl} className="w-full h-8 flex-1"></audio>
+                                        <button 
+                                            onClick={handleDownloadAudio}
+                                            className="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2 rounded-lg transition-colors border border-gray-200"
+                                            title="Download Audio (.wav)"
+                                        >
+                                            <DownloadIconSmall />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
+
+                        <button onClick={handleDownload} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-green-200 flex items-center justify-center gap-2">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Download Full Pack (.zip)
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
+    const renderSettings = () => (
+        <div className="max-w-2xl mx-auto animate-toastIn">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Pengaturan Akun</h2>
+            
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6 space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Nama Pengguna</label>
+                        <input 
+                            type="text" 
+                            value={userProfile.name} 
+                            onChange={(e) => setUserProfile(prev => ({ ...prev, name: e.target.value }))}
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Google Gemini API Key</label>
+                        <input 
+                            type="password" 
+                            value={userProfile.apiKey} 
+                            onChange={(e) => setUserProfile(prev => ({ ...prev, apiKey: e.target.value }))}
+                            placeholder="AIzaSy..."
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono text-sm"
+                        />
+                         <p className="text-xs text-gray-500 mt-2">
+                            Dapatkan API Key di <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-indigo-600 hover:underline">Google AI Studio</a>. Key disimpan secara lokal di browser Anda.
+                        </p>
+                    </div>
+                </div>
+                <div className="bg-gray-50 px-6 py-4 flex justify-end">
+                    <button onClick={() => showToast("Pengaturan tersimpan!", 'success')} className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderHelp = () => (
+         <div className="max-w-3xl mx-auto animate-toastIn">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Pusat Bantuan</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <a href="https://youtu.be/VLf_9JVS_6I" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all group">
+                    <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2">Tutorial Desktop</h3>
+                    <p className="text-gray-500 text-sm">Panduan langkah demi langkah menggunakan EngagePro di PC/Laptop.</p>
+                </a>
+
+                <a href="https://chat.whatsapp.com/Eizt8X0XsSr9fsRObnOWTM" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all group">
+                    <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2">Komunitas WhatsApp</h3>
+                    <p className="text-gray-500 text-sm">Bergabung dengan kreator lain dan dapatkan update terbaru.</p>
+                </a>
+                 
+                <a href="mailto:info@pondokgue.digital" className="col-span-1 md:col-span-2 bg-indigo-50 p-6 rounded-2xl border border-indigo-100 hover:bg-indigo-100 transition-all text-center">
+                    <p className="text-indigo-800 font-medium">Butuh bantuan teknis? <span className="font-bold underline">Hubungi Admin via Email</span></p>
+                </a>
+            </div>
+        </div>
+    );
+
+    // --- Main Render Structure ---
+
+    return (
+        <div className="bg-gray-50 min-h-screen font-sans text-gray-900 flex">
+            {/* Sidebar */}
+            {renderSidebar()}
+            
+            {/* Main Content Wrapper */}
+            <div className="flex-1 flex flex-col lg:ml-64 min-h-screen transition-all duration-300">
+                
+                {/* Mobile Header (Hamburger) */}
+                <header className="bg-white border-b border-gray-200 lg:hidden sticky top-0 z-40">
+                    <div className="px-4 py-3 flex items-center justify-between">
+                         <div className="flex items-center gap-2">
+                             <div className="bg-indigo-600 text-white p-1 rounded shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                            </div>
+                            <span className="font-bold text-gray-900">EngagePro AI</span>
+                        </div>
+                        <button onClick={() => setSidebarOpen(true)} className="text-gray-500 hover:text-indigo-600 p-1">
+                            <MenuIcon />
+                        </button>
+                    </div>
+                </header>
+
+                {/* Dashboard Header (Desktop) */}
+                <div className="hidden lg:flex items-center justify-between px-8 py-6 bg-white border-b border-gray-200">
+                     <div>
+                        <h2 className="text-xl font-bold text-gray-900 capitalize">{currentView === 'dashboard' ? 'Content Studio' : currentView}</h2>
+                        <p className="text-sm text-gray-500">
+                            {currentView === 'dashboard' ? 'Buat aset visual dan naskah dengan AI.' : 
+                             currentView === 'settings' ? 'Kelola preferensi dan API Key Anda.' : 'Pusat bantuan dan tutorial.'}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className="flex h-3 w-3 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </span>
+                        <span className="text-sm text-gray-500 font-medium">API Ready</span>
+                    </div>
+                </div>
+
+                {/* Main Viewport */}
+                <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
+                    {/* Loading Overlay */}
+                    {isLoading && (
+                        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+                            <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 flex flex-col items-center">
+                                <SpinnerIcon />
+                                <p className="mt-4 text-gray-800 font-medium animate-pulse">{loadingMessage}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Toast Notification Container */}
+                    <div className="fixed bottom-6 right-6 z-50 space-y-2 w-full max-w-sm pointer-events-none">
+                        {toasts.map(toast => (
+                            <div key={toast.id} className={`pointer-events-auto bg-white border-l-4 ${toast.type === 'error' ? 'border-red-500' : toast.type === 'success' ? 'border-green-500' : 'border-blue-500'} shadow-lg rounded-r-lg p-4 flex items-center animate-toastIn`}>
+                                <div className="flex-1 text-sm font-medium text-gray-900">{toast.message}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Views */}
+                    {currentView === 'dashboard' && renderDashboard()}
+                    {currentView === 'settings' && renderSettings()}
+                    {currentView === 'help' && renderHelp()}
+                </main>
+            </div>
+
+            {/* Video Modal (Global) */}
+            {isVideoModalOpen && (
+                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                     <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative">
+                        <button onClick={() => setVideoModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                            <CloseIcon />
+                        </button>
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Hasilkan Video AI</h2>
+                         <p className="text-gray-600 text-sm mb-6">Salin prompt animasi dari hasil generasi, lalu gunakan tools berikut:</p>
+                        
+                         <div className="space-y-3">
+                            <a href="https://www.meta.ai/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-xl border border-blue-200 transition-colors flex items-center justify-center gap-2">
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-1.07 3.97-2.1 5.39z"/></svg>
+                                Buka Meta AI
+                            </a>
+                            <a href="https://dreamina.capcut.com/ai-tool/home" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-gray-50 hover:bg-gray-100 text-gray-800 font-medium py-3 px-4 rounded-xl border border-gray-200 transition-colors">Buka Dreamina (CapCut)</a>
+                            <a href="https://runwayml.com/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-gray-50 hover:bg-gray-100 text-gray-800 font-medium py-3 px-4 rounded-xl border border-gray-200 transition-colors">Buka RunwayML</a>
+                            <a href="https://klingai.com/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-gray-50 hover:bg-gray-100 text-gray-800 font-medium py-3 px-4 rounded-xl border border-gray-200 transition-colors">Buka Kling AI</a>
+                        </div>
                     </div>
                 </div>
             )}
-
-            <header className="bg-white/80 backdrop-blur-md border-b border-white/40 shadow-sm sticky top-0 z-30">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-indigo-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-bold text-gray-900 tracking-tight leading-tight">EngagePro AI Studio</h1>
-                                <p className="text-xs text-gray-500 font-medium">AI Creative Suite for High-Conversion Content</p>
-                            </div>
-                        </div>
-                        <div className="hidden md:block text-xs text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100 font-semibold shadow-sm">
-                            v1.0.0 PRO
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-                <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-                    <div className="lg:col-span-1 space-y-8">
-                        <section>
-                            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <span className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white w-8 h-8 rounded-full inline-flex items-center justify-center text-sm font-bold shadow-md">1</span>
-                                Pilih Gaya Konten
-                            </h2>
-                            <p className="text-sm text-gray-500 mb-4 ml-11">Pilih visual style yang cocok untuk produk Anda.</p>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-3">
-                                {CONTENT_STYLES.map(styleInfo => (
-                                    <StyleCard key={styleInfo.id} styleInfo={styleInfo} isSelected={selectedStyle === styleInfo.id} onSelect={handleStyleSelect} />
-                                ))}
-                            </div>
-                        </section>
-                        
-                        {selectedStyle && (
-                            <section className="animate-toastIn">
-                                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3 mt-8 pt-8 border-t border-gray-200 lg:border-none lg:pt-0 lg:mt-0">
-                                    <span className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white w-8 h-8 rounded-full inline-flex items-center justify-center text-sm font-bold shadow-md">2</span>
-                                    Input Aset & Konfigurasi
-                                </h2>
-                                <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-                                    {mainAssetConfig && <FileInput {...mainAssetConfig} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
-                                    
-                                    {selectedStyle && !['aesthetic_hands_on'].includes(selectedStyle) && <FileInput id="model" label={selectedStyle === 'food_promo' ? "Foto Model/Influencer (Opsional, 1)" : "Foto Model (Opsional, 1)"} files={uploadedFiles.model} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
-                                    
-                                    {selectedStyle && ['fashion_broll', 'treadmill_fashion_show', 'aesthetic_hands_on', 'food_promo'].includes(selectedStyle) && <FileInput id="background" label="Foto Latar (Opsional, 1)" files={uploadedFiles.background} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
-
-                                    {stylesRequiringDescription.includes(selectedStyle) && <div className="space-y-2"><label htmlFor="text-description" className="block text-sm font-medium text-gray-700">{selectedStyle === 'food_promo' ? "Deskripsi Makanan/Lokasi (Wajib)" : "Deskripsi Teks (Wajib)"}</label><textarea id="text-description" rows={4} value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm" placeholder={selectedStyle === 'food_promo' ? "Contoh: Burger Keju Lumer di Kafe Senja..." : "Contoh: Sepatu lari terbaru..."}></textarea></div>}
-                                    {stylesRequiringTravelDesc.includes(selectedStyle) && <div className="space-y-2"><label htmlFor="text-description-travel" className="block text-sm font-medium text-gray-700">Deskripsi Teks (Wajib)</label><textarea id="text-description-travel" rows={4} value={travelDescription} onChange={e => setTravelDescription(e.target.value)} className="w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm" placeholder="Contoh: Villa mewah 3 kamar..."></textarea></div>}
-
-                                    <hr className="border-gray-100 my-4"/>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label htmlFor="orientation-select" className="block text-sm font-medium text-gray-700 mb-1.5">Orientasi Gambar</label>
-                                            <div className="relative">
-                                                <select id="orientation-select" value={orientation} onChange={e => setOrientation(e.target.value)} className="appearance-none w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm cursor-pointer hover:border-indigo-300">
-                                                    {ORIENTATIONS.map(orient => <option key={orient.id} value={orient.id}>{orient.name}</option>)}
-                                                </select>
-                                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                         <div>
-                                            <label htmlFor="language-select" className="block text-sm font-medium text-gray-700 mb-1.5">Bahasa Naskah</label>
-                                            <div className="relative">
-                                                <select id="language-select" value={language} onChange={e => setLanguage(e.target.value)} className="appearance-none w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm cursor-pointer hover:border-indigo-300">
-                                                    {LANGUAGES.map(lang => <option key={lang.id} value={lang.id}>{lang.name}</option>)}
-                                                </select>
-                                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                         {showScriptSection && <div className="sm:col-span-2">
-                                            <label htmlFor="script-style-select" className="block text-sm font-medium text-gray-700 mb-1.5">Gaya Naskah</label>
-                                            <div className="relative">
-                                                <select id="script-style-select" value={scriptStyle} onChange={e => setScriptStyle(e.target.value as ScriptStyle)} className="appearance-none w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm cursor-pointer hover:border-indigo-300">
-                                                    {SCRIPT_STYLES.map(style => <option key={style.id} value={style.id}>{style.name}</option>)}
-                                                </select>
-                                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                                </div>
-                                            </div>
-                                        </div>}
-                                    </div>
-                                    
-                                    <button onClick={startGenerationProcess} disabled={isLoading} className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3.5 px-4 rounded-xl text-lg transition-all transform hover:scale-[1.01] shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                                        {isLoading && generatedContent === null ? <div className='flex items-center justify-center gap-3'><span className='animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full'></span><span>Memproses...</span></div> : <span>Generate Konten</span>}
-                                    </button>
-                                </div>
-                            </section>
-                        )}
-                    </div>
-                    
-                    <div className="lg:col-span-2 space-y-8 mt-8 lg:mt-0">
-                        <section>
-                            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <span className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white w-8 h-8 rounded-full inline-flex items-center justify-center text-sm font-bold shadow-md">3</span>
-                                Hasil Konten
-                            </h2>
-                            {!generatedContent ? (
-                                <div className="flex items-center justify-center h-[500px] bg-white/50 backdrop-blur-sm rounded-2xl shadow-sm border border-dashed border-gray-300">
-                                    <div className="text-center p-8 max-w-md">
-                                        <PlaceholderIcon />
-                                        <h3 className="mt-4 text-lg font-semibold text-gray-900">Area Preview Kosong</h3>
-                                        <p className="mt-2 text-sm text-gray-500">Lengkapi langkah 1 & 2 di sebelah kiri, lalu klik tombol Generate. Hasil kreatif Anda akan muncul di sini.</p>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="space-y-8 animate-toastIn">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <button onClick={handleDownload} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl text-lg transition-all transform hover:scale-[1.01] shadow-lg shadow-green-200 flex items-center justify-center gap-2">
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                            Unduh Aset (.zip)
-                                        </button>
-                                        <a href="https://www.emailondeck.com" target="_blank" rel="noopener noreferrer" className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-xl text-lg transition-all shadow-sm hover:shadow text-center flex items-center justify-center">Buka EmailOnDeck</a>
-                                    </div>
-                                    
-                                    <section>
-                                        <h3 className="text-base uppercase tracking-wide text-gray-500 font-semibold mb-4">Visual Storyboard</h3>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                            {generatedContent.generatedImages.map((image, index) => (
-                                                <div key={index} className="flex flex-col gap-2 group">
-                                                    <div className='bg-white rounded-xl shadow-md overflow-hidden relative border border-gray-100 ring-1 ring-black/5 hover:shadow-xl transition-all duration-300' style={{ aspectRatio: orientation.replace(':', '/') }}>
-                                                        {image.success && image.base64 ? (
-                                                            <>
-                                                                <img src={`data:image/png;base64,${image.base64}`} alt={`Storyboard shot ${index + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                                                {generatedContent.animationPrompts[index] && <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8"><p className="text-white text-xs font-medium leading-tight line-clamp-3">🎥 {generatedContent.animationPrompts[index]}</p></div>}
-                                                            </>
-                                                        ) : (
-                                                            <div className="flex flex-col items-center justify-center h-full border-2 border-dashed border-red-300 bg-red-50 text-center text-red-500 p-2">
-                                                                <span className="font-bold text-xs mb-1">Gagal</span>
-                                                                <span className="text-[10px] leading-tight px-1">{image.error || "Unknown error"}</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    {image.success && (
-                                                        <button 
-                                                            onClick={() => setVideoModalOpen(true)} 
-                                                            className="w-full bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 font-medium py-2 px-3 rounded-lg text-sm transition-all shadow-sm"
-                                                        >
-                                                            Hasilkan Video
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </section>
-                                    
-                                    {showScriptSection && generatedContent.tiktokScript && (
-                                        <section>
-                                            <h3 className="text-base uppercase tracking-wide text-gray-500 font-semibold mb-4">Naskah & Audio</h3>
-                                            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-                                                {generatedContent.tiktokMetadata && (
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-2">Metadata</label>
-                                                        <div className="bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-200 space-y-3">
-                                                            <p className="text-sm text-gray-800 font-medium leading-relaxed">{generatedContent.tiktokMetadata.description}</p>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {generatedContent.tiktokMetadata.keywords.map((kw, i) => (
-                                                                    <span key={i} className="bg-white border border-indigo-100 text-indigo-600 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">#{kw}</span>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                <div>
-                                                    <label htmlFor="generated-script" className="block text-sm font-medium text-gray-700 mb-1.5">Naskah (Edit & Terjemahkan)</label>
-                                                    <textarea id="generated-script" rows={8} value={script} onChange={e => setScript(e.target.value)} className="w-full bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm leading-relaxed hover:border-indigo-300"></textarea>
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                    <button onClick={handleTranslate} disabled={isLoading} className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg text-sm transition-colors disabled:opacity-50 border border-gray-300 shadow-sm">Terjemahkan Naskah</button>
-                                                    <div className="relative">
-                                                        <select value={ttsVoice} onChange={e => setTtsVoice(e.target.value)} className="appearance-none w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm cursor-pointer hover:border-indigo-300">
-                                                            {TTS_VOICES.map(voice => <option key={voice.value} value={voice.value}>{voice.label}</option>)}
-                                                        </select>
-                                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button onClick={handleTts} disabled={isLoading} className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all disabled:opacity-50 shadow-md hover:shadow-lg shadow-indigo-200">Buat Audio Narasi (TTS)</button>
-                                                {audioUrl && <audio controls src={audioUrl} className="w-full mt-2 rounded-lg border border-gray-200 shadow-sm"></audio>}
-                                            </div>
-                                        </section>
-                                    )}
-                                </div>
-                            )}
-                        </section>
-                    </div>
-                </div>
-            </main>
         </div>
     );
 }
