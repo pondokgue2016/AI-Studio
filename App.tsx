@@ -56,6 +56,10 @@ const VideoIcon = () => (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
 );
 
+const CopyIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+);
+
 // --- Child Components ---
 
 interface StyleCardProps {
@@ -228,8 +232,13 @@ export default function App() {
     const [orientation, setOrientation] = useState('9:16');
     const [script, setScript] = useState('');
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
-    const [isVideoModalOpen, setVideoModalOpen] = useState(false);
-    const [videoPlatform, setVideoPlatform] = useState<'desktop' | 'mobile'>('desktop');
+    
+    // Video Modal State
+    const [videoModalData, setVideoModalData] = useState<{
+        isOpen: boolean;
+        imageUrl: string | null;
+        prompt: string;
+    }>({ isOpen: false, imageUrl: null, prompt: '' });
 
     // --- Effects ---
     
@@ -463,6 +472,27 @@ export default function App() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    };
+
+    const handleOpenVideoModal = (index: number) => {
+        if (!generatedContent) return;
+        const img = generatedContent.generatedImages[index];
+        const animPrompt = generatedContent.animationPrompts[index] || "Cinematic movement, high quality, 4k";
+
+        if (img.base64) {
+            // Auto copy prompt to clipboard
+            navigator.clipboard.writeText(animPrompt).then(() => {
+                showToast("Prompt animasi disalin ke clipboard!", 'success');
+            }).catch(() => {
+                showToast("Prompt siap disalin di modal.", 'info');
+            });
+
+            setVideoModalData({
+                isOpen: true,
+                imageUrl: `data:image/png;base64,${img.base64}`,
+                prompt: animPrompt
+            });
+        }
     };
 
     const handleDownloadAudio = () => {
@@ -714,7 +744,7 @@ export default function App() {
                                                     {/* Individual Image Buttons */}
                                                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button
-                                                            onClick={() => setVideoModalOpen(true)}
+                                                            onClick={() => handleOpenVideoModal(index)}
                                                             className="bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-colors backdrop-blur-sm"
                                                             title="Buat Video AI"
                                                         >
@@ -919,23 +949,71 @@ export default function App() {
             </div>
 
             {/* Video Modal (Global) */}
-            {isVideoModalOpen && (
+            {videoModalData.isOpen && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                     <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative">
-                        <button onClick={() => setVideoModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                     <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative flex flex-col max-h-[90vh]">
+                        <button onClick={() => setVideoModalData({ ...videoModalData, isOpen: false })} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10">
                             <CloseIcon />
                         </button>
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Hasilkan Video AI</h2>
-                         <p className="text-gray-600 text-sm mb-6">Salin prompt animasi dari hasil generasi, lalu gunakan tools berikut:</p>
                         
-                         <div className="space-y-3">
-                            <a href="https://www.meta.ai/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-xl border border-blue-200 transition-colors flex items-center justify-center gap-2">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-1.07 3.97-2.1 5.39z"/></svg>
-                                Buka Meta AI
-                            </a>
-                            <a href="https://dreamina.capcut.com/ai-tool/home" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-gray-50 hover:bg-gray-100 text-gray-800 font-medium py-3 px-4 rounded-xl border border-gray-200 transition-colors">Buka Dreamina (CapCut)</a>
-                            <a href="https://runwayml.com/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-gray-50 hover:bg-gray-100 text-gray-800 font-medium py-3 px-4 rounded-xl border border-gray-200 transition-colors">Buka RunwayML</a>
-                            <a href="https://klingai.com/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-gray-50 hover:bg-gray-100 text-gray-800 font-medium py-3 px-4 rounded-xl border border-gray-200 transition-colors">Buka Kling AI</a>
+                        <div className="text-center mb-4">
+                            <h2 className="text-xl font-bold text-gray-900">Buat Video AI</h2>
+                            <p className="text-xs text-gray-500">Gambar dan prompt telah siap.</p>
+                        </div>
+
+                        <div className="overflow-y-auto pr-1 custom-scrollbar">
+                            {/* Selected Image Preview */}
+                            {videoModalData.imageUrl && (
+                                <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 relative group">
+                                    <img src={videoModalData.imageUrl} alt="Reference" className="w-full h-48 object-cover" />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                         <a 
+                                            href={videoModalData.imageUrl} 
+                                            download="reference_image.png"
+                                            className="bg-white text-gray-900 px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg hover:bg-gray-100"
+                                         >
+                                            Download Gambar
+                                         </a>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Prompt Box */}
+                            <div className="mb-6">
+                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Prompt Animasi (Tersalin Otomatis)</label>
+                                <div className="relative">
+                                    <textarea 
+                                        readOnly 
+                                        value={videoModalData.prompt} 
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 h-20 resize-none outline-none focus:ring-1 focus:ring-indigo-500"
+                                    ></textarea>
+                                    <button 
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(videoModalData.prompt);
+                                            showToast("Prompt disalin!", 'success');
+                                        }}
+                                        className="absolute top-2 right-2 text-gray-400 hover:text-indigo-600 bg-white rounded p-1 shadow-sm border border-gray-100"
+                                        title="Salin lagi"
+                                    >
+                                        <CopyIcon />
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <hr className="border-gray-100 mb-6" />
+
+                            <div className="space-y-3">
+                                <p className="text-center text-sm font-medium text-gray-800 mb-2">Pilih Tools Video AI:</p>
+                                <a href="https://www.meta.ai/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-xl border border-blue-200 transition-colors flex items-center justify-center gap-2">
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-1.07 3.97-2.1 5.39z"/></svg>
+                                    Buka Meta AI
+                                </a>
+                                <a href="https://dreamina.capcut.com/ai-tool/home" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-gray-50 hover:bg-gray-100 text-gray-800 font-medium py-3 px-4 rounded-xl border border-gray-200 transition-colors">Buka Dreamina (CapCut)</a>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <a href="https://runwayml.com/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-white hover:bg-gray-50 text-gray-600 text-xs font-medium py-2 px-2 rounded-lg border border-gray-200 transition-colors">RunwayML</a>
+                                    <a href="https://klingai.com/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-white hover:bg-gray-50 text-gray-600 text-xs font-medium py-2 px-2 rounded-lg border border-gray-200 transition-colors">Kling AI</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
