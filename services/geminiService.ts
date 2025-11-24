@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Modality, Part } from "@google/genai";
 import { ContentStyle, UploadedFile, UploadedFilesState, CreativePlan } from '../types';
 import { STORY_FLOWS } from '../constants';
@@ -381,4 +382,63 @@ export async function generateTTSAudio(script: string, langCode: string, voiceNa
     } else {
         throw new Error("Invalid audio response from API.");
     }
+}
+
+// --- Prompt Lab Services ---
+
+export async function generateMagicPrompt(rawText: string): Promise<string> {
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("API Key tidak ditemukan.");
+    const ai = new GoogleGenAI({ apiKey });
+    
+    const systemInstruction = `
+        Anda adalah Prompt Engineer ahli untuk Midjourney, Stable Diffusion, dan Flux.
+        Tugas Anda adalah mengubah ide sederhana menjadi prompt profesional berkualitas tinggi.
+        
+        ATURAN:
+        1. Tambahkan detail pencahayaan (cinematic lighting, golden hour, volumetric).
+        2. Tambahkan detail kamera (8k, high resolution, photorealistic, 35mm lens).
+        3. Tambahkan gaya artistik yang relevan.
+        4. OUTPUT HANYA TEKS PROMPT FINAL (Bahasa Inggris). Jangan ada pengantar.
+    `;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `Expand this concept into a killer image generation prompt: "${rawText}"`,
+        config: { systemInstruction }
+    });
+    
+    return response.text.trim();
+}
+
+export async function analyzeImageToPrompt(file: UploadedFile): Promise<string> {
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("API Key tidak ditemukan.");
+    const ai = new GoogleGenAI({ apiKey });
+
+    const systemInstruction = `
+        Anda adalah ahli "Reverse Engineering" AI Art.
+        Tugas Anda adalah melihat sebuah gambar dan menuliskan Text Prompt yang presisi untuk menghasilkan gambar serupa di Midjourney/Stable Diffusion.
+        
+        Fokus pada:
+        1. Subjek utama (deskripsi fisik detail).
+        2. Komposisi & Angle kamera.
+        3. Pencahayaan & Warna.
+        4. Art Style & Vibe.
+        
+        OUTPUT HANYA TEKS PROMPT (Bahasa Inggris).
+    `;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: {
+            parts: [
+                { text: "Analyze this image and provide a generation prompt." },
+                { inlineData: { mimeType: file.type, data: file.data } }
+            ]
+        },
+        config: { systemInstruction }
+    });
+
+    return response.text.trim();
 }

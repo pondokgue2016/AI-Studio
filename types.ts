@@ -2,7 +2,7 @@
 export type ContentStyle = 'direct' | 'quick_review' | 'fashion_broll' | 'travel' | 'property' | 'treadmill_fashion_show' | 'aesthetic_hands_on' | 'food_promo';
 export type ScriptStyle = 'direct' | 'poetic' | 'absurd' | 'informative' | 'humorous' | 'mysterious';
 
-export type AppView = 'dashboard' | 'settings' | 'help';
+export type AppView = 'dashboard' | 'settings' | 'help' | 'prompt_lab';
 
 export interface UserProfile {
     name: string;

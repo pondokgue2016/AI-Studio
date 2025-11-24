@@ -46,6 +46,10 @@ const DashboardIcon = () => (
     <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
 );
 
+const MagicIcon = () => (
+    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+);
+
 const SettingsIcon = () => (
     <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
 );
@@ -224,6 +228,13 @@ export default function App() {
         prompt: string;
     }>({ isOpen: false, imageUrl: null, prompt: '' });
 
+    // Prompt Lab State
+    const [promptLabMode, setPromptLabMode] = useState<'expander' | 'scanner'>('expander');
+    const [promptInput, setPromptInput] = useState('');
+    const [promptResult, setPromptResult] = useState('');
+    const [promptImage, setPromptImage] = useState<UploadedFile | null>(null);
+    const [isPromptLoading, setIsPromptLoading] = useState(false);
+
     // --- Effects ---
     
     // Load User Profile from Local Storage
@@ -316,6 +327,44 @@ export default function App() {
         const hasViteKey = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY;
         return !!(userProfile.apiKey || hasViteKey);
     }, [userProfile.apiKey]);
+
+    // --- Prompt Lab Handlers ---
+
+    const handleMagicPrompt = async () => {
+        if (!promptInput.trim()) return showToast("Masukkan ide teks terlebih dahulu.", 'warning');
+        setIsPromptLoading(true);
+        try {
+            const result = await GeminiService.generateMagicPrompt(promptInput);
+            setPromptResult(result);
+            showToast("Magic Prompt berhasil dibuat!", 'success');
+        } catch (error: any) {
+            showToast(`Gagal membuat prompt: ${error.message}`, 'error');
+        } finally {
+            setIsPromptLoading(false);
+        }
+    };
+
+    const handleImageAnalysis = async () => {
+        if (!promptImage) return showToast("Upload gambar referensi terlebih dahulu.", 'warning');
+        setIsPromptLoading(true);
+        try {
+            const result = await GeminiService.analyzeImageToPrompt(promptImage);
+            setPromptResult(result);
+            showToast("Analisis gambar selesai!", 'success');
+        } catch (error: any) {
+            showToast(`Gagal menganalisis: ${error.message}`, 'error');
+        } finally {
+            setIsPromptLoading(false);
+        }
+    };
+
+    const handleCopyPrompt = () => {
+        if (!promptResult) return;
+        navigator.clipboard.writeText(promptResult);
+        showToast("Prompt disalin ke clipboard!", 'success');
+    };
+
+    // --- Content Generation Handlers ---
 
     const startGenerationProcess = useCallback(async () => {
         if (!isApiKeyAvailable) {
@@ -641,6 +690,13 @@ export default function App() {
 
                     <div className="pt-4 mt-4 border-t border-gray-800">
                         <button
+                            onClick={() => { setCurrentView('prompt_lab'); setSidebarOpen(false); }}
+                            className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'prompt_lab' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                        >
+                            <MagicIcon />
+                            <span className="font-medium">Prompt Lab</span>
+                        </button>
+                        <button
                             onClick={() => { setCurrentView('settings'); setSidebarOpen(false); }}
                             className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'settings' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
                         >
@@ -671,6 +727,95 @@ export default function App() {
                 </div>
             </div>
         </aside>
+    );
+
+    const renderPromptLab = () => (
+        <div className="max-w-4xl mx-auto animate-toastIn h-full flex flex-col">
+            {/* Tab Navigation */}
+            <div className="flex border-b border-gray-200 mb-6">
+                <button 
+                    onClick={() => { setPromptLabMode('expander'); setPromptResult(''); }}
+                    className={`pb-4 px-6 text-sm font-medium transition-all relative ${promptLabMode === 'expander' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                    Magic Prompt Expander
+                </button>
+                <button 
+                    onClick={() => { setPromptLabMode('scanner'); setPromptResult(''); }}
+                    className={`pb-4 px-6 text-sm font-medium transition-all relative ${promptLabMode === 'scanner' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                    Image Scanner (Reverse Engineering)
+                </button>
+            </div>
+
+            {/* Content Area */}
+            <div className="grid lg:grid-cols-2 gap-8 flex-1">
+                {/* Input Section */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 h-fit">
+                    {promptLabMode === 'expander' ? (
+                        <>
+                            <h3 className="font-bold text-gray-900 mb-2">Ide Sederhana</h3>
+                            <p className="text-xs text-gray-500 mb-4">Masukkan ide singkat, AI akan mengubahnya menjadi prompt detail.</p>
+                            <textarea 
+                                value={promptInput}
+                                onChange={(e) => setPromptInput(e.target.value)}
+                                placeholder='Contoh: "Sepatu lari warna merah di jalan aspal saat hujan"'
+                                className="w-full h-40 bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-4"
+                            ></textarea>
+                            <button 
+                                onClick={handleMagicPrompt}
+                                disabled={isPromptLoading}
+                                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                            >
+                                {isPromptLoading ? <SpinnerIcon /> : <><MagicIcon /> Expand Magic Prompt</>}
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <h3 className="font-bold text-gray-900 mb-2">Upload Referensi</h3>
+                            <p className="text-xs text-gray-500 mb-4">Upload gambar viral/keren, AI akan membuatkan prompt untuk menirunya.</p>
+                            <FileInput 
+                                id="promptImage" 
+                                label="Gambar Referensi" 
+                                files={promptImage} 
+                                onFilesChange={(id, files) => setPromptImage(files[0])} 
+                                onFileRemove={() => setPromptImage(null)} 
+                            />
+                            <button 
+                                onClick={handleImageAnalysis}
+                                disabled={isPromptLoading}
+                                className="w-full mt-4 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                            >
+                                {isPromptLoading ? <SpinnerIcon /> : <><MagicIcon /> Scan & Generate Prompt</>}
+                            </button>
+                        </>
+                    )}
+                </div>
+
+                {/* Output Section */}
+                <div className="bg-gray-900 text-gray-100 p-6 rounded-2xl shadow-lg flex flex-col h-full min-h-[300px]">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-indigo-400 uppercase tracking-wider text-sm">Hasil Prompt (English)</h3>
+                        <button 
+                            onClick={handleCopyPrompt}
+                            className="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-xs flex items-center gap-2 transition-colors"
+                        >
+                            <CopyIcon /> Copy
+                        </button>
+                    </div>
+                    
+                    <div className="flex-1 bg-gray-800/50 rounded-xl p-4 border border-gray-700 font-mono text-sm leading-relaxed overflow-y-auto custom-scrollbar">
+                        {promptResult ? (
+                            promptResult
+                        ) : (
+                            <span className="text-gray-500 italic">
+                                {isPromptLoading ? "Sedang memproses..." : "Hasil prompt akan muncul di sini..."}
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-4 text-center">Cocok untuk: Midjourney, Stable Diffusion, Flux, Dreamina.</p>
+                </div>
+            </div>
+        </div>
     );
 
     const renderDashboard = () => (
@@ -940,9 +1085,14 @@ export default function App() {
                 {/* Dashboard Header (Desktop) */}
                 <div className="hidden lg:flex items-center justify-between px-8 py-6 bg-white border-b border-gray-200">
                      <div>
-                        <h2 className="text-xl font-bold text-gray-900 capitalize">{currentView === 'dashboard' ? (currentStyleName || 'Content Studio') : currentView}</h2>
+                        <h2 className="text-xl font-bold text-gray-900 capitalize">
+                            {currentView === 'dashboard' ? (currentStyleName || 'Content Studio') : 
+                             currentView === 'prompt_lab' ? 'Prompt Lab' :
+                             currentView}
+                        </h2>
                         <p className="text-sm text-gray-500">
                             {currentView === 'dashboard' ? 'Buat aset visual dan naskah dengan AI.' : 
+                             currentView === 'prompt_lab' ? 'Eksperimen dengan prompt AI Art.' :
                              currentView === 'settings' ? 'Kelola preferensi dan API Key Anda.' : 'Pusat bantuan dan tutorial.'}
                         </p>
                     </div>
@@ -985,6 +1135,7 @@ export default function App() {
 
                     {/* Views */}
                     {currentView === 'dashboard' && renderDashboard()}
+                    {currentView === 'prompt_lab' && renderPromptLab()}
                     {currentView === 'settings' && renderSettings()}
                     {currentView === 'help' && renderHelp()}
                 </main>
