@@ -1,6 +1,8 @@
 
 import { ContentStyle, ScriptStyle } from './types';
 
+export const APP_VERSION = 'v2.1';
+
 export const CONTENT_STYLES: { id: ContentStyle; name: string; description: string }[] = [
     { id: 'direct', name: 'Presentasi Produk', description: 'Fokus pada solusi & manfaat produk.' },
     { id: 'quick_review', name: 'Review Cepat', description: 'Testimoni singkat & padat.' },

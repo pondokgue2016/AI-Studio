@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { CONTENT_STYLES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_MULTIPLE_FILES, TTS_VOICES, SCRIPT_STYLES, LANGUAGES, ORIENTATIONS } from './constants';
+import { CONTENT_STYLES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_MULTIPLE_FILES, TTS_VOICES, SCRIPT_STYLES, LANGUAGES, ORIENTATIONS, APP_VERSION } from './constants';
 import { ContentStyle, GeneratedContentState, ToastMessage, UploadedFile, UploadedFilesState, GeneratedImage, ScriptStyle, AppView, UserProfile } from './types';
 import * as GeminiService from './services/geminiService';
 import { Part } from '@google/genai';
@@ -650,7 +650,7 @@ export default function App() {
                         </div>
                         <div>
                              <h1 className="text-lg font-bold tracking-tight">EngagePro</h1>
-                             <span className="text-[10px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded ml-1">v2.0</span>
+                             <span className="text-[10px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded ml-1">{APP_VERSION}</span>
                         </div>
                     </div>
                     <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
@@ -1034,12 +1034,12 @@ export default function App() {
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Pusat Bantuan</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <a href="https://youtu.be/VLf_9JVS_6I" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all group">
-                    <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all group">
+                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
                     </div>
-                    <h3 className="font-bold text-gray-900 mb-2">Tutorial Desktop</h3>
-                    <p className="text-gray-500 text-sm">Panduan langkah demi langkah menggunakan EngagePro di PC/Laptop.</p>
+                    <h3 className="font-bold text-gray-900 mb-2">Ambil API Key</h3>
+                    <p className="text-gray-500 text-sm">Dapatkan Google Gemini API Key secara gratis di sini untuk mulai membuat konten.</p>
                 </a>
 
                 <a href="https://chat.whatsapp.com/Eizt8X0XsSr9fsRObnOWTM" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all group">
