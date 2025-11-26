@@ -1052,10 +1052,10 @@ export default function App() {
     );
 
     const renderHelp = () => (
-         <div className="max-w-3xl mx-auto animate-toastIn">
+         <div className="max-w-3xl mx-auto animate-toastIn pb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Pusat Bantuan</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all group">
                     <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
@@ -1083,6 +1083,79 @@ export default function App() {
                 <a href="mailto:info@pondokgue.digital" className="col-span-1 md:col-span-2 bg-indigo-50 p-6 rounded-2xl border border-indigo-100 hover:bg-indigo-100 transition-all text-center">
                     <p className="text-indigo-800 font-medium">Butuh bantuan teknis? <span className="font-bold underline">Hubungi Admin via Email</span></p>
                 </a>
+            </div>
+
+            {/* Text Tutorial Section */}
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Panduan Lengkap: Cara Membuat API Key</h3>
+                
+                <div className="space-y-8 text-sm text-gray-600">
+                    <section>
+                        <p className="mb-4">
+                            Google Gemini API Key adalah kunci rahasia yang memungkinkan EngagePro AI Studio terhubung dengan otak kecerdasan buatan Google. 
+                            Ikuti langkah mudah berikut untuk mendapatkannya secara gratis:
+                        </p>
+                    </section>
+
+                    <section>
+                        <h4 className="font-bold text-gray-900 text-base mb-2 flex items-center gap-2">
+                            <span className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full text-xs">1</span>
+                            Masuk ke Google AI Studio
+                        </h4>
+                        <ul className="list-disc pl-10 space-y-1 marker:text-gray-400">
+                            <li>Buka browser dan kunjungi <a href="https://aistudio.google.com" target="_blank" className="text-indigo-600 hover:underline font-medium">Google AI Studio (aistudio.google.com)</a>.</li>
+                            <li>Klik tombol <strong>Sign In</strong> dan masuk menggunakan akun Google (Gmail) Anda.</li>
+                            <li>Jika muncul persetujuan syarat & ketentuan, klik setuju/accept.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h4 className="font-bold text-gray-900 text-base mb-2 flex items-center gap-2">
+                            <span className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full text-xs">2</span>
+                            Buat Project Baru
+                        </h4>
+                        <ul className="list-disc pl-10 space-y-1 marker:text-gray-400">
+                            <li>Di halaman utama, cari tombol <strong>"Get API key"</strong> di menu sebelah kiri atas.</li>
+                            <li>Klik tombol biru bertuliskan <strong>"Create API key"</strong>.</li>
+                            <li>Pilih opsi <strong>"Create API key in new project"</strong>.</li>
+                            <li>Tunggu beberapa detik hingga proses selesai.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h4 className="font-bold text-gray-900 text-base mb-2 flex items-center gap-2">
+                            <span className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full text-xs">3</span>
+                            Salin & Tempel Kunci
+                        </h4>
+                        <ul className="list-disc pl-10 space-y-1 marker:text-gray-400">
+                            <li>Akan muncul kode acak yang panjang (Dimulai dengan "AIza...").</li>
+                            <li>Klik tombol <strong>Copy</strong> di sebelahnya.</li>
+                            <li>Kembali ke aplikasi EngagePro AI Studio ini.</li>
+                            <li>Masuk ke menu <strong>Pengaturan</strong> di sidebar kiri.</li>
+                            <li>Tempel (Paste) kode tersebut ke dalam kolom "Google Gemini API Key".</li>
+                            <li>Klik <strong>Simpan Perubahan</strong>. Selesai!</li>
+                        </ul>
+                    </section>
+
+                    {/* FAQ Box */}
+                    <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 mt-6">
+                        <h4 className="font-bold text-gray-900 text-base mb-4">FAQ (Pertanyaan Umum)</h4>
+                        <div className="space-y-4">
+                            <div>
+                                <p className="font-bold text-gray-800 text-xs uppercase mb-1">Apakah ini berbayar?</p>
+                                <p>Tidak. Anda bisa menggunakan <strong>Free Tier</strong> dari Google tanpa perlu memasukkan kartu kredit. Free tier sudah cukup untuk penggunaan normal aplikasi ini.</p>
+                            </div>
+                            <div>
+                                <p className="font-bold text-gray-800 text-xs uppercase mb-1">Apa itu Error 429 (Too Many Requests)?</p>
+                                <p>Jika Anda menggunakan akun gratis, Google membatasi kecepatan pembuatan. EngagePro sudah memiliki sistem antrian otomatis untuk mencegah hal ini, namun jika terjadi, cukup tunggu 1 menit lalu coba lagi.</p>
+                            </div>
+                            <div>
+                                <p className="font-bold text-gray-800 text-xs uppercase mb-1">Apakah kunci saya aman?</p>
+                                <p>Ya. EngagePro menyimpan API Key Anda di dalam browser Anda sendiri (Local Storage). Kunci tidak dikirim ke server kami, melainkan langsung ke Google saat Anda menekan tombol Generate.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
