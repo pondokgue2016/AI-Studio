@@ -1027,6 +1027,21 @@ export default function App() {
                         </button>
                     </div>
 
+                    <div className="mt-6 border-t border-gray-100 pt-6">
+                        <p className="text-sm text-gray-600 mb-3">Belum punya lisensi?</p>
+                        <a 
+                            href="https://www.pondokgue.digital/engagepro-studio-ai/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="block w-full bg-green-50 text-green-700 font-bold py-2.5 rounded-xl border border-green-200 hover:bg-green-100 transition-colors text-sm mb-3 flex items-center justify-center gap-2"
+                        >
+                            Beli Lisensi Disini <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        </a>
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-800 leading-relaxed">
+                            🎁 <strong>Promo Spesial:</strong> Gunakan kode kupon <code className="bg-yellow-100 px-1.5 py-0.5 rounded border border-yellow-200 font-mono font-bold text-yellow-900 mx-1">engageearly</code> untuk diskon <span className="font-bold text-red-600">Rp 150.000</span>.
+                        </div>
+                    </div>
+
                     <div className="mt-8 text-xs text-gray-400 select-none">
                         Version {APP_VERSION}
                     </div>
