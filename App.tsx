@@ -1,12 +1,16 @@
-
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { CONTENT_STYLES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_MULTIPLE_FILES, TTS_VOICES, SCRIPT_STYLES, LANGUAGES, ORIENTATIONS, APP_VERSION } from './constants';
-import { ContentStyle, GeneratedContentState, ToastMessage, UploadedFile, UploadedFilesState, GeneratedImage, ScriptStyle, AppView, UserProfile } from './types';
+import { ContentStyle, GeneratedContentState, ToastMessage, UploadedFile, UploadedFilesState, GeneratedImage, ScriptStyle, AppView, UserProfile, HistoryItem } from './types';
 import * as GeminiService from './services/geminiService';
 import { Part } from '@google/genai';
 
 // Type assertion for JSZip from CDN
 declare const JSZip: any;
+// Type assertion for jsPDF from CDN
+declare const jspdf: {
+    jsPDF: any;
+};
+
 // Type assertion for AI Studio utilities
 declare global {
     interface AIStudio {
@@ -58,21 +62,85 @@ const HelpIcon = () => (
     <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
 );
 
+const HistoryIcon = () => (
+    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+);
+
 const DownloadIconSmall = () => (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+);
+
+const PdfIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
 );
 
 const VideoIcon = () => (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
 );
 
+const GoogleIcon = () => (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z" fill="#FBBC05"></path><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path></svg>
+)
+
 const CopyIcon = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+);
+
+const TrashIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
 );
 
 const ChevronDownIcon = ({ className }: { className?: string }) => (
     <svg className={`w-4 h-4 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
 );
+
+// New Icons for Prompt Lab Submenus
+const SparklesIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+);
+
+const ScanIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+);
+
+const FilmIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" /></svg>
+);
+
+// --- New Content Strategy Icons ---
+
+const PresentationIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
+);
+
+const LightningIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+);
+
+const WalkIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.5 10.5L21 3m-5 0h5v5m0 6l-2.707-2.707a1 1 0 00-1.414 0L12 16.5l-2.5 5m-2.5-5L3 12.5m10-2l-2-2m2 2l2-2m-2 2l-2-2" /></svg>
+);
+
+const CameraIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+);
+
+const GlobeIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+);
+
+const HomeIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+);
+
+const HandIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg>
+);
+
+const UtensilsIcon = () => (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+);
+
 
 // --- Child Components ---
 
@@ -195,18 +263,25 @@ export default function App() {
     const [currentView, setCurrentView] = useState<AppView>('dashboard');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isStrategyMenuOpen, setIsStrategyMenuOpen] = useState(true);
+    const [isPromptLabMenuOpen, setIsPromptLabMenuOpen] = useState(true);
     
     // User Profile State
     const [userProfile, setUserProfile] = useState<UserProfile>({
         name: 'Creator',
         plan: 'Pro',
-        apiKey: ''
+        apiKey: '',
+        brandName: '',
+        toneOfVoice: '',
+        targetAudience: ''
     });
 
     // Content State
     const [selectedStyle, setSelectedStyle] = useState<ContentStyle | null>(null);
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFilesState>({ product: null, model: null, background: null, fashionItems: [], locations: [] });
     const [generatedContent, setGeneratedContent] = useState<GeneratedContentState | null>(null);
+    const [history, setHistory] = useState<HistoryItem[]>([]);
+    
+    // UI State
     const [isLoading, setIsLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -228,8 +303,9 @@ export default function App() {
         prompt: string;
     }>({ isOpen: false, imageUrl: null, prompt: '' });
 
+
     // Prompt Lab State
-    const [promptLabMode, setPromptLabMode] = useState<'expander' | 'scanner'>('expander');
+    const [promptLabMode, setPromptLabMode] = useState<'expander' | 'scanner' | 'video'>('expander');
     const [promptInput, setPromptInput] = useState('');
     const [promptResult, setPromptResult] = useState('');
     const [promptImage, setPromptImage] = useState<UploadedFile | null>(null);
@@ -237,19 +313,30 @@ export default function App() {
 
     // --- Effects ---
     
-    // Load User Profile from Local Storage
+    // Load Profile & History
     useEffect(() => {
         const storedProfile = localStorage.getItem('engageProProfile');
         if (storedProfile) {
             const parsed = JSON.parse(storedProfile);
-            setUserProfile(parsed);
+            setUserProfile(prev => ({
+                ...prev,
+                ...parsed
+            }));
             if (parsed.apiKey) GeminiService.setLocalApiKey(parsed.apiKey);
         } else {
-            // Default check for environment vars if no local profile
              // @ts-ignore
              if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
                  // @ts-ignore
                 GeminiService.setLocalApiKey(import.meta.env.VITE_API_KEY);
+            }
+        }
+
+        const storedHistory = localStorage.getItem('engageProHistory');
+        if (storedHistory) {
+            try {
+                setHistory(JSON.parse(storedHistory));
+            } catch (e) {
+                console.error("Failed to load history", e);
             }
         }
     }, []);
@@ -269,6 +356,17 @@ export default function App() {
         localStorage.setItem('engageProProfile', JSON.stringify(userProfile));
         if (userProfile.apiKey) GeminiService.setLocalApiKey(userProfile.apiKey);
     }, [userProfile]);
+
+    // Save History to Local Storage when it changes
+    useEffect(() => {
+        try {
+            localStorage.setItem('engageProHistory', JSON.stringify(history));
+        } catch (e) {
+            console.error("Local Storage Quota Exceeded", e);
+            showToast("Penyimpanan lokal penuh. Riwayat lama mungkin terhapus.", 'warning');
+            // Logic to pop oldest item could go here if critical
+        }
+    }, [history]);
 
     useEffect(() => {
         setScript(generatedContent?.tiktokScript || '');
@@ -292,6 +390,13 @@ export default function App() {
         // Close sidebar on mobile after selection
         if (window.innerWidth < 1024) setSidebarOpen(false);
     }, []);
+
+    const handlePromptLabSelect = (mode: 'expander' | 'scanner' | 'video') => {
+        setPromptLabMode(mode);
+        setCurrentView('prompt_lab');
+        setPromptResult('');
+        if (window.innerWidth < 1024) setSidebarOpen(false);
+    };
 
     const handleFilesChange = useCallback((id: string, newFiles: UploadedFile[]) => {
         setUploadedFiles(prev => {
@@ -344,6 +449,20 @@ export default function App() {
         }
     };
 
+    const handleVideoPrompt = async () => {
+        if (!promptInput.trim()) return showToast("Masukkan ide video terlebih dahulu.", 'warning');
+        setIsPromptLoading(true);
+        try {
+            const result = await GeminiService.generateVideoPrompt(promptInput);
+            setPromptResult(result);
+            showToast("Video Prompt berhasil dibuat!", 'success');
+        } catch (error: any) {
+            showToast(`Gagal: ${error.message}`, 'error');
+        } finally {
+            setIsPromptLoading(false);
+        }
+    };
+
     const handleImageAnalysis = async () => {
         if (!promptImage) return showToast("Upload gambar referensi terlebih dahulu.", 'warning');
         setIsPromptLoading(true);
@@ -362,6 +481,46 @@ export default function App() {
         if (!promptResult) return;
         navigator.clipboard.writeText(promptResult);
         showToast("Prompt disalin ke clipboard!", 'success');
+    };
+
+    // --- History Handlers ---
+
+    const saveToHistory = (content: GeneratedContentState, style: ContentStyle, desc: string) => {
+        // IMPORTANT: Set audioBlob to null before saving to avoid LocalStorage quota issues
+        const contentToSave: GeneratedContentState = {
+            ...content,
+            audioBlob: null
+        };
+
+        const newItem: HistoryItem = {
+            id: Date.now(),
+            timestamp: Date.now(),
+            style,
+            description: desc || "Untitled Project",
+            thumbnail: content.generatedImages.find(img => img.success)?.base64 || null,
+            content: contentToSave
+        };
+        setHistory(prev => [newItem, ...prev]);
+    };
+
+    const loadHistoryItem = (item: HistoryItem) => {
+        setSelectedStyle(item.style);
+        setGeneratedContent(item.content);
+        setScript(item.content.tiktokScript || '');
+        if (['travel', 'property'].includes(item.style)) {
+             setTravelDescription(item.description);
+        } else {
+             setDescription(item.description);
+        }
+        setCurrentView('dashboard');
+        showToast("Proyek berhasil dimuat!", 'success');
+    };
+
+    const deleteHistoryItem = (id: number) => {
+        if (confirm("Apakah Anda yakin ingin menghapus proyek ini?")) {
+            setHistory(prev => prev.filter(item => item.id !== id));
+            showToast("Proyek dihapus.", 'info');
+        }
     };
 
     // --- Content Generation Handlers ---
@@ -390,12 +549,10 @@ export default function App() {
         
         try {
             setLoadingMessage("Menganalisis & merancang rencana kreatif...");
-            const plan = await GeminiService.getCreativePlan(selectedStyle, uploadedFiles, currentDescription, language, scriptStyle, orientation);
+            // Pass userProfile to the service
+            const plan = await GeminiService.getCreativePlan(selectedStyle, uploadedFiles, currentDescription, language, scriptStyle, orientation, userProfile);
             
             const promptsToGenerate = plan.shotPrompts;
-            
-            // --- NEW: Sequential Logic for Free Tier Safety ---
-            // Instead of Promise.all, we use a loop with delay.
             
             const images: GeneratedImage[] = [];
             const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -414,13 +571,12 @@ export default function App() {
                     if (uploadedFiles.model) referenceParts.push({ text: "Foto Model (Referensi Pose/Orang):" }, { inlineData: { mimeType: uploadedFiles.model.type, data: uploadedFiles.model.data }});
                     
                     try {
-                        const result = await GeminiService.generateSingleImage(promptsToGenerate[0], referenceParts);
+                        const result = await GeminiService.generateSingleImage(promptsToGenerate[0], referenceParts, orientation);
                         images.push({ ...result, prompt: promptsToGenerate[0] });
                     } catch (e) {
                          images.push({ success: false, base64: null, prompt: promptsToGenerate[0], error: "Generation failed" });
                     }
 
-                    // Delay to prevent Rate Limit (429) on Free Tier
                     if (i < uploadedFiles.fashionItems.length - 1) await delay(3000); 
                 }
 
@@ -440,13 +596,12 @@ export default function App() {
                     if (uploadedFiles.background) referenceParts.push({ text: "Gambar Latar:" }, { inlineData: { mimeType: uploadedFiles.background.type, data: uploadedFiles.background.data }});
 
                     try {
-                        const result = await GeminiService.generateSingleImage(prompt, referenceParts);
+                        const result = await GeminiService.generateSingleImage(prompt, referenceParts, orientation);
                         images.push({ ...result, prompt });
                     } catch (e) {
                          images.push({ success: false, base64: null, prompt, error: "Generation failed" });
                     }
 
-                    // Delay to prevent Rate Limit (429) on Free Tier
                     if (i < promptsToGenerate.length - 1) await delay(3000);
                 }
             }
@@ -476,16 +631,25 @@ export default function App() {
             
             const animationPrompts = await Promise.all(animationPromises);
 
-            setGeneratedContent({
+            const finalContent: GeneratedContentState = {
                 tiktokScript: plan.tiktokScript,
                 shotPrompts: plan.shotPrompts,
                 generatedImages: images,
                 animationPrompts,
                 audioBlob: null,
                 tiktokMetadata: plan.tiktokMetadata,
-            });
+            };
+
+            setGeneratedContent(finalContent);
             
-            showToast("Konten berhasil dibuat!", 'success');
+            // Save to history automatically
+            try {
+                saveToHistory(finalContent, selectedStyle, currentDescription || "Project Baru");
+            } catch (histError) {
+                console.warn("Could not save to history", histError);
+            }
+
+            showToast("Konten berhasil dibuat & disimpan!", 'success');
             if (images.some(img => !img.success)) {
                 showToast("Beberapa gambar gagal dibuat.", 'warning');
             }
@@ -502,7 +666,7 @@ export default function App() {
             setIsLoading(false);
             setLoadingMessage('');
         }
-    }, [selectedStyle, uploadedFiles, description, travelDescription, language, scriptStyle, orientation, showToast, isApiKeyAvailable]);
+    }, [selectedStyle, uploadedFiles, description, travelDescription, language, scriptStyle, orientation, showToast, isApiKeyAvailable, userProfile]); // Added userProfile to dependencies
     
     const handleTranslate = async () => {
         if (!script) return;
@@ -551,7 +715,6 @@ export default function App() {
         const animPrompt = generatedContent.animationPrompts[index] || "Cinematic movement, high quality, 4k";
 
         if (img.base64) {
-            // Auto copy prompt to clipboard
             navigator.clipboard.writeText(animPrompt).then(() => {
                 showToast("Prompt animasi disalin ke clipboard!", 'success');
             }).catch(() => {
@@ -574,6 +737,97 @@ export default function App() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    };
+
+    const handleDownloadPDF = async () => {
+        if (!generatedContent) return;
+        showToast("Mempersiapkan PDF Storyboard...", 'info');
+        
+        try {
+            const { jsPDF } = jspdf;
+            const doc = new jsPDF();
+            
+            // --- Page 1: Overview ---
+            doc.setFontSize(22);
+            doc.setTextColor(33, 33, 33);
+            doc.text("EngagePro AI - Storyboard", 20, 20);
+            
+            doc.setFontSize(12);
+            doc.setTextColor(100);
+            doc.text(`Project: ${selectedStyle ? CONTENT_STYLES.find(s=>s.id === selectedStyle)?.name : 'Untitled'}`, 20, 30);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 36);
+            
+            // TikTok Script
+            doc.setFontSize(16);
+            doc.setTextColor(0);
+            doc.text("Naskah Video / TikTok Script", 20, 50);
+            
+            doc.setFontSize(11);
+            doc.setTextColor(50);
+            const splitScript = doc.splitTextToSize(generatedContent.tiktokScript || "No Script", 170);
+            doc.text(splitScript, 20, 60);
+            
+            let yPos = 60 + (splitScript.length * 5) + 20;
+
+            // Metadata
+            if (generatedContent.tiktokMetadata) {
+                doc.setFontSize(12);
+                doc.setTextColor(0);
+                doc.text("Metadata", 20, yPos);
+                yPos += 7;
+                
+                doc.setFontSize(10);
+                doc.setTextColor(80);
+                doc.text(`Title/Description: ${generatedContent.tiktokMetadata.description}`, 20, yPos);
+                yPos += 10;
+                doc.text(`Keywords: ${generatedContent.tiktokMetadata.keywords.join(", ")}`, 20, yPos);
+                yPos += 15;
+            }
+
+            // --- Shots (Visuals) ---
+            doc.addPage();
+            let pageY = 20;
+            
+            doc.setFontSize(18);
+            doc.setTextColor(0);
+            doc.text("Visual Storyboard", 20, pageY);
+            pageY += 15;
+
+            for (let i = 0; i < generatedContent.generatedImages.length; i++) {
+                const img = generatedContent.generatedImages[i];
+                if (img.success && img.base64) {
+                    
+                    if (pageY > 200) {
+                        doc.addPage();
+                        pageY = 20;
+                    }
+
+                    // Add Image
+                    // Aspect ratio calculation simplified for PDF placement
+                    doc.addImage(`data:image/png;base64,${img.base64}`, 'PNG', 20, pageY, 60, 60); // Square preview box
+                    
+                    // Add Text Info Next to Image
+                    doc.setFontSize(12);
+                    doc.setTextColor(0);
+                    doc.text(`Shot ${i+1}`, 90, pageY + 5);
+                    
+                    doc.setFontSize(9);
+                    doc.setTextColor(80);
+                    const animText = generatedContent.animationPrompts[i] ? `Animation: ${generatedContent.animationPrompts[i]}` : "No animation prompt.";
+                    const splitAnim = doc.splitTextToSize(animText, 100);
+                    doc.text(splitAnim, 90, pageY + 15);
+
+                    pageY += 70; // Space for next item
+                }
+            }
+
+            doc.save("EngagePro_Storyboard.pdf");
+            showToast("PDF berhasil diunduh!", 'success');
+
+        } catch (error: any) {
+            console.error(error);
+            showToast(`Gagal membuat PDF: ${error.message}. Pastikan koneksi internet stabil untuk library.`, 'error');
+        }
     };
 
     const handleDownload = async () => {
@@ -628,6 +882,21 @@ export default function App() {
             showToast("File ZIP berhasil diunduh!", 'success');
         } catch (error: any) {
              showToast(`Gagal membuat ZIP: ${error.message}`, 'error');
+        }
+    };
+
+    // --- Helper for Icons ---
+    const getStyleIcon = (styleId: string) => {
+        switch (styleId) {
+            case 'direct': return <PresentationIcon />;
+            case 'quick_review': return <LightningIcon />;
+            case 'treadmill_fashion_show': return <WalkIcon />;
+            case 'fashion_broll': return <CameraIcon />;
+            case 'travel': return <GlobeIcon />;
+            case 'property': return <HomeIcon />;
+            case 'aesthetic_hands_on': return <HandIcon />;
+            case 'food_promo': return <UtensilsIcon />;
+            default: return <DashboardIcon />;
         }
     };
 
@@ -704,13 +973,16 @@ export default function App() {
                         </button>
                         
                         {isStrategyMenuOpen && (
-                            <div className="pl-11 space-y-1 animate-toastIn">
+                            <div className="pl-6 space-y-1 animate-toastIn">
                                 {CONTENT_STYLES.map((style) => (
                                     <button
                                         key={style.id}
                                         onClick={() => handleStyleSelect(style.id)}
-                                        className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${selectedStyle === style.id && currentView === 'dashboard' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}
+                                        className={`flex items-center w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${selectedStyle === style.id && currentView === 'dashboard' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}
                                     >
+                                        <span className="opacity-70 group-hover:opacity-100 mr-2">
+                                            {getStyleIcon(style.id)}
+                                        </span>
                                         {style.name}
                                     </button>
                                 ))}
@@ -719,13 +991,52 @@ export default function App() {
                     </div>
 
                     <div className="pt-4 mt-4 border-t border-gray-800">
+                         {/* Prompt Lab Accordion */}
+                         <div className="space-y-1 mb-2">
+                            <button
+                                onClick={() => setIsPromptLabMenuOpen(!isPromptLabMenuOpen)}
+                                className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all ${currentView === 'prompt_lab' ? 'text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                            >
+                                <div className="flex items-center">
+                                    <MagicIcon />
+                                    <span className="font-medium">Prompt Lab</span>
+                                </div>
+                                <ChevronDownIcon className={`transform transition-transform ${isPromptLabMenuOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            
+                            {isPromptLabMenuOpen && (
+                                <div className="pl-11 space-y-1 animate-toastIn">
+                                    <button
+                                        onClick={() => handlePromptLabSelect('expander')}
+                                        className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${promptLabMode === 'expander' && currentView === 'prompt_lab' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}
+                                    >
+                                        <SparklesIcon /> Expander
+                                    </button>
+                                    <button
+                                        onClick={() => handlePromptLabSelect('scanner')}
+                                        className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${promptLabMode === 'scanner' && currentView === 'prompt_lab' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}
+                                    >
+                                        <ScanIcon /> Scanner
+                                    </button>
+                                    <button
+                                        onClick={() => handlePromptLabSelect('video')}
+                                        className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${promptLabMode === 'video' && currentView === 'prompt_lab' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}
+                                    >
+                                        <FilmIcon /> Video
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* History Menu */}
                         <button
-                            onClick={() => { setCurrentView('prompt_lab'); setSidebarOpen(false); }}
-                            className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'prompt_lab' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                            onClick={() => { setCurrentView('history'); setSidebarOpen(false); }}
+                            className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
                         >
-                            <MagicIcon />
-                            <span className="font-medium">Prompt Lab</span>
+                            <HistoryIcon />
+                            <span className="font-medium">Riwayat</span>
                         </button>
+
                         <button
                             onClick={() => { setCurrentView('settings'); setSidebarOpen(false); }}
                             className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'settings' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
@@ -759,31 +1070,67 @@ export default function App() {
         </aside>
     );
 
+    const renderHistory = () => (
+        <div className="animate-toastIn h-full">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <HistoryIcon /> Riwayat Generasi
+            </h2>
+            {history.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-[50vh] bg-white rounded-2xl border border-dashed border-gray-300">
+                    <HistoryIcon />
+                    <p className="mt-4 text-gray-500">Belum ada riwayat tersimpan.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {history.map((item) => (
+                        <div key={item.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+                            <div className="h-40 bg-gray-100 relative">
+                                {item.thumbnail ? (
+                                    <img src={`data:image/png;base64,${item.thumbnail}`} alt="Thumbnail" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
+                                )}
+                                <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded">
+                                    {new Date(item.timestamp).toLocaleDateString()}
+                                </div>
+                            </div>
+                            <div className="p-4 flex-1 flex flex-col">
+                                <h3 className="font-bold text-gray-900 truncate mb-1">{item.description}</h3>
+                                <p className="text-xs text-indigo-600 bg-indigo-50 w-fit px-2 py-0.5 rounded mb-4">
+                                    {CONTENT_STYLES.find(s => s.id === item.style)?.name || item.style}
+                                </p>
+                                <div className="mt-auto flex gap-2">
+                                    <button 
+                                        onClick={() => loadHistoryItem(item)}
+                                        className="flex-1 bg-indigo-600 text-white text-xs font-medium py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                                    >
+                                        Buka (Load)
+                                    </button>
+                                    <button 
+                                        onClick={() => deleteHistoryItem(item.id)}
+                                        className="bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100 transition-colors"
+                                        title="Hapus"
+                                    >
+                                        <TrashIcon />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+
     const renderPromptLab = () => (
         <div className="max-w-4xl mx-auto animate-toastIn h-full flex flex-col">
-            {/* Tab Navigation */}
-            <div className="flex border-b border-gray-200 mb-6">
-                <button 
-                    onClick={() => { setPromptLabMode('expander'); setPromptResult(''); }}
-                    className={`pb-4 px-6 text-sm font-medium transition-all relative ${promptLabMode === 'expander' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    Magic Prompt Expander
-                </button>
-                <button 
-                    onClick={() => { setPromptLabMode('scanner'); setPromptResult(''); }}
-                    className={`pb-4 px-6 text-sm font-medium transition-all relative ${promptLabMode === 'scanner' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
-                >
-                    Image Scanner (Reverse Engineering)
-                </button>
-            </div>
-
             {/* Content Area */}
             <div className="grid lg:grid-cols-2 gap-8 flex-1">
                 {/* Input Section */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 h-fit">
                     {promptLabMode === 'expander' ? (
                         <>
-                            <h3 className="font-bold text-gray-900 mb-2">Ide Sederhana</h3>
+                            <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2"><SparklesIcon /> Ide Sederhana</h3>
                             <p className="text-xs text-gray-500 mb-4">Masukkan ide singkat, AI akan mengubahnya menjadi prompt detail.</p>
                             <textarea 
                                 value={promptInput}
@@ -799,9 +1146,27 @@ export default function App() {
                                 {isPromptLoading ? <SpinnerIcon /> : <><MagicIcon /> Expand Magic Prompt</>}
                             </button>
                         </>
+                    ) : promptLabMode === 'video' ? (
+                        <>
+                            <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2"><FilmIcon /> Ide Video</h3>
+                            <p className="text-xs text-gray-500 mb-4">Masukkan konsep video, AI akan membuat prompt teknis (Kamera, Lighting, Fisika).</p>
+                            <textarea 
+                                value={promptInput}
+                                onChange={(e) => setPromptInput(e.target.value)}
+                                placeholder='Contoh: "Kucing berlari di lorong pesawat luar angkasa, sinematik"'
+                                className="w-full h-40 bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-4"
+                            ></textarea>
+                            <button 
+                                onClick={handleVideoPrompt}
+                                disabled={isPromptLoading}
+                                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                            >
+                                {isPromptLoading ? <SpinnerIcon /> : <><VideoIcon /> Generate Video Prompt</>}
+                            </button>
+                        </>
                     ) : (
                         <>
-                            <h3 className="font-bold text-gray-900 mb-2">Upload Referensi</h3>
+                            <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2"><ScanIcon /> Upload Referensi</h3>
                             <p className="text-xs text-gray-500 mb-4">Upload gambar viral/keren, AI akan membuatkan prompt untuk menirunya.</p>
                             <FileInput 
                                 id="promptImage" 
@@ -842,7 +1207,7 @@ export default function App() {
                             </span>
                         )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-4 text-center">Cocok untuk: Midjourney, Stable Diffusion, Flux, Dreamina.</p>
+                    <p className="text-xs text-gray-500 mt-4 text-center">Cocok untuk: {promptLabMode === 'video' ? 'Veo, Sora, Kling, Runway' : 'Midjourney, Stable Diffusion, Flux, Dreamina'}.</p>
                 </div>
             </div>
         </div>
@@ -950,9 +1315,14 @@ export default function App() {
                                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="text-sm font-bold uppercase text-gray-700">Visual Storyboard</h3>
-                                        <button onClick={handleDownload} className="text-xs font-bold text-green-600 hover:text-green-700 bg-green-50 px-3 py-1 rounded-lg border border-green-100 flex items-center gap-1">
-                                            <DownloadIconSmall /> Download All
-                                        </button>
+                                        <div className="flex gap-2">
+                                            <button onClick={handleDownloadPDF} className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 px-3 py-1 rounded-lg border border-red-100 flex items-center gap-1 transition-colors">
+                                                <PdfIcon /> Export PDF
+                                            </button>
+                                            <button onClick={handleDownload} className="text-xs font-bold text-green-600 hover:text-green-700 bg-green-50 px-3 py-1 rounded-lg border border-green-100 flex items-center gap-1 transition-colors">
+                                                <DownloadIconSmall /> Download ZIP
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                         {generatedContent.generatedImages.map((image, index) => (
@@ -964,17 +1334,17 @@ export default function App() {
                                                             <div className="absolute top-2 left-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded-full">Shot {index+1}</div>
                                                             
                                                             {/* Individual Image Buttons */}
-                                                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-col">
                                                                 <button
                                                                     onClick={() => handleOpenVideoModal(index)}
-                                                                    className="bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-colors backdrop-blur-sm"
-                                                                    title="Buat Video AI"
+                                                                    className="bg-indigo-600 hover:bg-indigo-700 text-white p-1.5 rounded-full transition-colors backdrop-blur-sm shadow-sm"
+                                                                    title="Buat Video dari Gambar Ini"
                                                                 >
                                                                     <VideoIcon />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDownloadSingleImage(image.base64!, index)}
-                                                                    className="bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-colors backdrop-blur-sm"
+                                                                    className="bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-colors backdrop-blur-sm shadow-sm"
                                                                     title="Download Gambar Ini"
                                                                 >
                                                                     <DownloadIconSmall />
@@ -1058,6 +1428,48 @@ export default function App() {
                             Dapatkan API Key di <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-indigo-600 hover:underline">Google AI Studio</a>. Key disimpan secara lokal di browser Anda.
                         </p>
                     </div>
+
+                    <hr className="border-gray-100" />
+
+                    <div className="space-y-4">
+                        <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                            <span className="w-1 h-5 bg-indigo-500 rounded-full"></span>
+                            Custom Brand Persona
+                        </h3>
+                        <p className="text-sm text-gray-500">Isi data ini agar naskah yang dihasilkan lebih personal sesuai brand Anda.</p>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Nama Brand (Brand Name)</label>
+                            <input 
+                                type="text" 
+                                value={userProfile.brandName || ''} 
+                                onChange={(e) => setUserProfile(prev => ({ ...prev, brandName: e.target.value }))}
+                                placeholder="Contoh: Kopi Senja, Toko Berkah"
+                                className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Tone of Voice (Gaya Bicara)</label>
+                            <input 
+                                type="text" 
+                                value={userProfile.toneOfVoice || ''} 
+                                onChange={(e) => setUserProfile(prev => ({ ...prev, toneOfVoice: e.target.value }))}
+                                placeholder="Contoh: Santai & Akrab, Profesional & Mewah, Lucu & Receh"
+                                className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
+                            <input 
+                                type="text" 
+                                value={userProfile.targetAudience || ''} 
+                                onChange={(e) => setUserProfile(prev => ({ ...prev, targetAudience: e.target.value }))}
+                                placeholder="Contoh: Gen Z, Ibu Rumah Tangga, Pria Dewasa"
+                                className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            />
+                        </div>
+                    </div>
+
                 </div>
                 <div className="bg-gray-50 px-6 py-4 flex justify-end">
                     <button onClick={() => showToast("Pengaturan tersimpan!", 'success')} className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors">
@@ -1207,12 +1619,18 @@ export default function App() {
                      <div>
                         <h2 className="text-xl font-bold text-gray-900 capitalize">
                             {currentView === 'dashboard' ? (currentStyleName || 'Content Studio') : 
-                             currentView === 'prompt_lab' ? 'Prompt Lab' :
-                             currentView}
+                             currentView === 'prompt_lab' ? (
+                                promptLabMode === 'expander' ? 'Prompt Lab: Magic Expander' :
+                                promptLabMode === 'scanner' ? 'Prompt Lab: Image Scanner' :
+                                'Prompt Lab: Video Prompter'
+                             ) :
+                             currentView === 'history' ? 'Riwayat' :
+                             currentView === 'settings' ? 'Kelola preferensi dan API Key Anda.' : 'Pusat bantuan dan tutorial.'}
                         </h2>
                         <p className="text-sm text-gray-500">
                             {currentView === 'dashboard' ? 'Buat aset visual dan naskah dengan AI.' : 
-                             currentView === 'prompt_lab' ? 'Eksperimen dengan prompt AI Art.' :
+                             currentView === 'prompt_lab' ? 'Eksperimen dengan prompt AI Art & Video.' :
+                             currentView === 'history' ? 'Kelola proyek yang telah Anda buat.' :
                              currentView === 'settings' ? 'Kelola preferensi dan API Key Anda.' : 'Pusat bantuan dan tutorial.'}
                         </p>
                     </div>
@@ -1256,12 +1674,13 @@ export default function App() {
                     {/* Views */}
                     {currentView === 'dashboard' && renderDashboard()}
                     {currentView === 'prompt_lab' && renderPromptLab()}
+                    {currentView === 'history' && renderHistory()}
                     {currentView === 'settings' && renderSettings()}
                     {currentView === 'help' && renderHelp()}
                 </main>
             </div>
 
-            {/* Video Modal (Global) */}
+            {/* Video Modal (Tools Selector) */}
             {videoModalData.isOpen && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
                      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative flex flex-col max-h-[90vh]">
@@ -1317,6 +1736,10 @@ export default function App() {
 
                             <div className="space-y-3">
                                 <p className="text-center text-sm font-medium text-gray-800 mb-2">Pilih Tools Video AI:</p>
+                                <a href="https://aitestkitchen.withgoogle.com/tools/video-fx" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-3 px-4 rounded-xl border border-indigo-200 transition-colors flex items-center justify-center gap-2">
+                                    <GoogleIcon />
+                                    Buka Google VideoFX (Labs)
+                                </a>
                                 <a href="https://www.meta.ai/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-xl border border-blue-200 transition-colors flex items-center justify-center gap-2">
                                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-1.07 3.97-2.1 5.39z"/></svg>
                                     Buka Meta AI

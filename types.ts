@@ -2,12 +2,16 @@
 export type ContentStyle = 'direct' | 'quick_review' | 'fashion_broll' | 'travel' | 'property' | 'treadmill_fashion_show' | 'aesthetic_hands_on' | 'food_promo';
 export type ScriptStyle = 'direct' | 'poetic' | 'absurd' | 'informative' | 'humorous' | 'mysterious';
 
-export type AppView = 'dashboard' | 'settings' | 'help' | 'prompt_lab';
+export type AppView = 'dashboard' | 'settings' | 'help' | 'prompt_lab' | 'history';
 
 export interface UserProfile {
     name: string;
     plan: 'Free' | 'Pro' | 'Enterprise';
     apiKey: string;
+    // Brand Persona Fields
+    brandName?: string;
+    toneOfVoice?: string;
+    targetAudience?: string;
 }
 
 export interface UploadedFile {
@@ -43,6 +47,15 @@ export interface GeneratedContentState {
       keywords: string[];
       description: string;
   } | null;
+}
+
+export interface HistoryItem {
+    id: number;
+    timestamp: number;
+    style: ContentStyle;
+    description: string; // Short description/title
+    thumbnail: string | null; // Base64 of first image
+    content: GeneratedContentState;
 }
 
 export interface ToastMessage {

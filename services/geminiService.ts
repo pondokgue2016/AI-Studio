@@ -1,6 +1,5 @@
-
 import { GoogleGenAI, Modality, Part } from "@google/genai";
-import { ContentStyle, UploadedFile, UploadedFilesState, CreativePlan } from '../types';
+import { ContentStyle, UploadedFile, UploadedFilesState, CreativePlan, UserProfile } from '../types';
 import { STORY_FLOWS } from '../constants';
 
 // --- API Key Utility ---
@@ -100,8 +99,24 @@ function pcmToWav(pcmData: Int16Array, numChannels: number, sampleRate: number):
 
 // --- Gemini API Service ---
 
-function buildCreativePlanPayload(style: ContentStyle, lang: string, description: string, scriptStyle: string, orientation: string) {
+function buildCreativePlanPayload(style: ContentStyle, lang: string, description: string, scriptStyle: string, orientation: string, userProfile?: UserProfile) {
     let systemInstruction = "";
+    
+    // Construct Brand Persona Prompt Segment
+    const brandPersonaPrompt = userProfile?.brandName ? `
+        === BRAND PERSONA (WAJIB DIIKUTI) ===
+        Brand Name: ${userProfile.brandName}
+        Tone of Voice: ${userProfile.toneOfVoice || 'Professional & Trustworthy'}
+        Target Audience: ${userProfile.targetAudience || 'General Audience'}
+        
+        INSTRUKSI NASKAH:
+        Gunakan "Tone of Voice" di atas saat menulis 'tiktokScript'. Sesuaikan gaya bahasa agar relevan dengan 'Target Audience'.
+        Sebutkan nama brand "${userProfile.brandName}" secara natural di dalam naskah jika relevan.
+    ` : `
+        === BRAND PERSONA ===
+        Gunakan tone of voice yang sesuai dengan gaya naskah '${scriptStyle}'.
+    `;
+
     let userQuery = `
         Deskripsi User: ${description || "Tidak ada deskripsi"}
         Bahasa Naskah: ${lang}
@@ -119,6 +134,8 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
     const baseSystemInstruction = `
         Anda adalah AI Creative Director. Tugas Anda adalah membuat rencana konten (storyboard) untuk affiliate marketing.
         
+        ${brandPersonaPrompt}
+
         ATURAN UTAMA (VISUAL CONSISTENCY IS KING):
         Masalah utama dalam AI video adalah model yang berubah-ubah. Anda HARUS memperbaikinya dengan teknik "VISUAL ANCHOR".
         
@@ -148,7 +165,7 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
                 2. **KONSISTENSI LOKASI:** Tentukan satu lokasi yang logis (misal: kamar tidur, dapur, kantor). Ulangi deskripsi lokasi ini di setiap shot.
                 3. **FOKUS PRODUK:** Pastikan produk terlihat jelas.
                 
-                DETAIL NASKAH (tiktokScript): Buat naskah dalam ${lang} (40-60 kata) dengan gaya soft selling dan nuansa '${scriptStyle}'.
+                DETAIL NASKAH (tiktokScript): Buat naskah dalam ${lang} (40-60 kata) dengan gaya soft selling.
                 DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}. Ingat: Copy-paste deskripsi karakter & pakaian di setiap prompt. Akhiri setiap prompt dengan "${imageQualityPrompt}".`;
             break;
         case 'fashion_broll':
@@ -183,7 +200,7 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
                 1. **LOKASI:** Prioritaskan akurasi visual lokasi berdasarkan 'Aset Utama' dan hasil Google Search.
                 2. **KARAKTER:** Tambahkan "Back view of [Character]" atau "Wide shot of [Character]" untuk memberi skala pada pemandangan. Konsistensi pakaian karakter tetap wajib dijaga (misal: selalu pakai Topi Putih dan Dress Biru).
                 
-                DETAIL NASKAH (tiktokScript): Naskah ${lang} (40-60 kata), gaya '${scriptStyle}'. Gunakan fakta lokasi.
+                DETAIL NASKAH (tiktokScript): Naskah ${lang} (40-60 kata). Gunakan fakta lokasi.
                 DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}. Setiap prompt harus menggabungkan keindahan lokasi DAN kehadiran karakter yang konsisten. Akhiri dengan "${imageQualityPrompt}, natural sunlight".`;
             userQuery = `Gaya Konten: ${style}\n(Gunakan Google Search untuk menemukan info visual lokasi ini).\n${userQuery}`;
             useGoogleSearch = true;
@@ -196,7 +213,7 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
                 1. **JANGAN UBAH PROPERTI:** Prompt harus fokus pada "A realistic photo of the provided room...".
                 2. **MANUSIA:** Tambahkan manusia untuk skala. "A [Detailed Character] sitting on the sofa...". Pastikan karakter ini (baju/rambut) konsisten jika muncul di beberapa shot.
                 
-                DETAIL NASKAH (tiktokScript): Naskah ${lang} (40-60 kata), gaya '${scriptStyle}'.
+                DETAIL NASKAH (tiktokScript): Naskah ${lang} (40-60 kata).
                 DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}. Setiap prompt dimulai dengan "Adding [Character] to the scene: ". Akhiri dengan "keep architecture unchanged. ${imageQualityPrompt}".`;
             userQuery = `Gaya Konten: ${style}\n(Gunakan Google Search untuk info properti).\n${userQuery}`;
             useGoogleSearch = true;
@@ -234,7 +251,7 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
                    - Shot 4: BITE MARK. Makanan sudah tergigit. Tekstur dalam terlihat.
                    - Shot 5: HALF EATEN. Makanan tinggal setengah.
                 
-                DETAIL NASKAH (tiktokScript): Naskah ${lang} (40-60 kata), gaya '${scriptStyle}', menggugah selera.
+                DETAIL NASKAH (tiktokScript): Naskah ${lang} (40-60 kata), menggugah selera.
                 DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}.
                 - Shot 1: "Medium shot of [Character Description] holding the WHOLE PERFECT [Food] up to the camera, in [Location]..."
                 - Shot 2: "Cinematic Commercial Food Photography of the [Food] on a table. Extreme close-up, steam rising, water droplets, fresh ingredients visible. NO PEOPLE. Dramatic studio lighting. 8k resolution, advertising standard."
@@ -247,7 +264,7 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
     return { systemInstruction, userQuery, useGoogleSearch };
 }
 
-export async function getCreativePlan(style: ContentStyle, files: UploadedFilesState, description: string, language: string, scriptStyle: string, orientation: string): Promise<CreativePlan> {
+export async function getCreativePlan(style: ContentStyle, files: UploadedFilesState, description: string, language: string, scriptStyle: string, orientation: string, userProfile?: UserProfile): Promise<CreativePlan> {
     const apiKey = getApiKey();
     if (!apiKey) throw new Error("API Key tidak ditemukan. Pastikan Anda telah memasukkan API Key.");
     
@@ -258,7 +275,8 @@ export async function getCreativePlan(style: ContentStyle, files: UploadedFilesS
         'en-US': 'English'
     };
     const langText = langTextMap[language] || 'Bahasa Indonesia';
-    const { systemInstruction, userQuery, useGoogleSearch } = buildCreativePlanPayload(style, langText, description, scriptStyle, orientation);
+    // Pass userProfile to buildCreativePlanPayload
+    const { systemInstruction, userQuery, useGoogleSearch } = buildCreativePlanPayload(style, langText, description, scriptStyle, orientation, userProfile);
     
     const imageParts: Part[] = [];
 
@@ -282,8 +300,11 @@ export async function getCreativePlan(style: ContentStyle, files: UploadedFilesS
         }
     });
 
-    const textResponse = response.text.replace(/```json|```/g, "").trim();
+    // Safety check for response.text
+    const rawText = response.text || "";
+    const textResponse = rawText.replace(/```json|```/g, "").trim();
     try {
+        if (!textResponse) throw new Error("Respons kosong dari AI");
         return JSON.parse(textResponse) as CreativePlan;
     } catch (e) {
         console.error("Failed to parse Creative Plan JSON", textResponse);
@@ -291,7 +312,7 @@ export async function getCreativePlan(style: ContentStyle, files: UploadedFilesS
     }
 }
 
-export async function generateSingleImage(prompt: string, referenceParts: Part[]): Promise<{ success: boolean; base64: string | null; error?: string }> {
+export async function generateSingleImage(prompt: string, referenceParts: Part[], orientation: string): Promise<{ success: boolean; base64: string | null; error?: string }> {
     const apiKey = getApiKey();
     if (!apiKey) return { success: false, base64: null, error: "API Key Missing" };
     
@@ -303,12 +324,19 @@ export async function generateSingleImage(prompt: string, referenceParts: Part[]
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: { parts: [{ text: strongPrompt }, ...referenceParts] },
-            config: { responseModalities: [Modality.IMAGE] },
+            config: { 
+                responseModalities: [Modality.IMAGE],
+                imageConfig: {
+                    aspectRatio: orientation // '9:16', '16:9', '1:1' match API specs
+                }
+            },
         });
 
-        for (const part of response.candidates[0].content.parts) {
-            if (part.inlineData) {
-                return { success: true, base64: part.inlineData.data };
+        if (response.candidates && response.candidates[0].content && response.candidates[0].content.parts) {
+            for (const part of response.candidates[0].content.parts) {
+                if (part.inlineData) {
+                    return { success: true, base64: part.inlineData.data };
+                }
             }
         }
         return { success: false, base64: null, error: "No image data in response" };
@@ -327,7 +355,7 @@ export async function getAnimationPrompt(imagePrompt: string): Promise<string | 
             model: 'gemini-2.5-flash',
             contents: `Berdasarkan prompt gambar ini: "${imagePrompt}", berikan 1 (SATU) saran animasi video yang deskriptif dan sinematik (sekitar 6-10 kata). Kombinasikan SATU gerakan kamera (cth: Slow Dolly In, Fast Pan Left) DAN SATU gerakan objek/karakter (cth: Model tersenyum, Produk berputar). Contoh: "Slow dolly in pada karakter yang tersenyum."`,
         });
-        return response.text.trim();
+        return (response.text || "").trim();
     } catch (error) {
         console.warn("Failed to get animation prompt:", error);
         return null;
@@ -348,7 +376,7 @@ export async function translateScript(script: string, targetLangCode: string, sc
         model: 'gemini-2.5-flash',
         contents: `Terjemahkan naskah berikut ke ${targetLang} (kode: ${targetLangCode}). Jaga agar tetap singkat (sekitar 40-60 kata) dengan gaya soft selling untuk TikTok dan pertahankan nuansa gaya '${scriptStyle}'. Naskah: "${script}"`,
     });
-    return response.text.trim();
+    return (response.text || "").trim();
 }
 
 export async function generateTTSAudio(script: string, langCode: string, voiceName: string): Promise<Blob> {
@@ -408,7 +436,7 @@ export async function generateMagicPrompt(rawText: string): Promise<string> {
         config: { systemInstruction }
     });
     
-    return response.text.trim();
+    return (response.text || "").trim();
 }
 
 export async function analyzeImageToPrompt(file: UploadedFile): Promise<string> {
@@ -440,5 +468,33 @@ export async function analyzeImageToPrompt(file: UploadedFile): Promise<string> 
         config: { systemInstruction }
     });
 
-    return response.text.trim();
+    return (response.text || "").trim();
+}
+
+export async function generateVideoPrompt(rawText: string): Promise<string> {
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("API Key tidak ditemukan.");
+    const ai = new GoogleGenAI({ apiKey });
+
+    const systemInstruction = `
+        Anda adalah Director of Photography (DoP) dan AI Video Expert untuk model seperti Google Veo, Sora, dan Kling.
+        Tugas Anda: Mengubah ide video kasar menjadi PROMPT VIDEO TEKNIS yang sangat detail.
+
+        STRUKTUR PROMPT (Wajib dalam Bahasa Inggris):
+        [Subject Description] + [Action/Movement] + [Camera Movement] + [Lighting/Atmosphere] + [Technical Specs]
+
+        ATURAN KHUSUS:
+        1. CAMERA: Jelaskan gerakan kamera spesifik (e.g., "Slow smooth dolly in", "Truck left", "Low angle tracking shot", "Drone FPV").
+        2. PHYSICS: Jelaskan bagaimana objek bergerak (e.g., "hair blowing in wind", "water splashing", "fabric flowing").
+        3. CONSISTENCY: Pastikan deskripsi visual konsisten.
+        4. OUTPUT: HANYA Teks Prompt Final.
+    `;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `Create a high-fidelity video generation prompt for: "${rawText}"`,
+        config: { systemInstruction }
+    });
+
+    return (response.text || "").trim();
 }
