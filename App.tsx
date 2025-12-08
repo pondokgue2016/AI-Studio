@@ -94,6 +94,14 @@ const ChevronDownIcon = ({ className }: { className?: string }) => (
     <svg className={`w-4 h-4 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
 );
 
+const EyeIcon = () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+);
+
+const EyeOffIcon = () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+);
+
 // New Icons for Prompt Lab Submenus
 const SparklesIcon = () => (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
@@ -302,6 +310,7 @@ export default function App() {
     const [licenseInput, setLicenseInput] = useState('');
     const [showAdminGenerator, setShowAdminGenerator] = useState(false);
     const [generatedKey, setGeneratedKey] = useState('');
+    const [showLicenseKey, setShowLicenseKey] = useState(false); // To toggle visibility in settings
     
     // Reference for license input
     const licenseInputRef = useRef<HTMLInputElement>(null);
@@ -473,6 +482,16 @@ export default function App() {
             showToast("Akses clipboard diblokir browser. Silakan paste manual (Ctrl+V).", 'info');
             // Fallback: Focus the input so they can type/paste
             licenseInputRef.current?.focus();
+        }
+    };
+
+    const handleDeactivateLicense = () => {
+        if (confirm("Apakah Anda yakin ingin menghapus lisensi dari perangkat ini? Akses aplikasi akan terkunci kembali.")) {
+            localStorage.removeItem('engageProLicense');
+            setIsLicensed(false);
+            setLicenseInput('');
+            setCurrentView('dashboard'); // Reset view state
+            showToast("Lisensi berhasil dihapus.", 'info');
         }
     };
 
@@ -1583,10 +1602,72 @@ export default function App() {
         </div>
     );
 
-    const renderSettings = () => (
+    const renderSettings = () => {
+        const savedLicenseEncrypted = localStorage.getItem('engageProLicense');
+        const realLicense = savedLicenseEncrypted ? window.atob(savedLicenseEncrypted) : '';
+        const maskedLicense = showLicenseKey 
+            ? realLicense 
+            : realLicense.replace(/^([^-]+)-([^-]+)-([^-]+)$/, "$1-****-$3");
+            
+        return (
         <div className="max-w-2xl mx-auto animate-toastIn">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Pengaturan Akun</h2>
             
+            {/* License Status Card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+                <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                         <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                            Status Lisensi
+                        </h3>
+                        {realLicense ? (
+                            <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1">
+                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                AKTIF
+                            </span>
+                        ) : (
+                            <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-bold">INACTIVE</span>
+                        )}
+                    </div>
+                    
+                    {realLicense && (
+                        <div className="space-y-4">
+                             <div className="relative">
+                                <label className="block text-xs font-medium text-gray-500 mb-1">Kode Lisensi Anda</label>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="text" 
+                                        readOnly
+                                        value={maskedLicense}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-600 font-mono text-sm"
+                                    />
+                                    <button 
+                                        onClick={() => setShowLicenseKey(!showLicenseKey)}
+                                        className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-500 rounded-lg px-3 transition-colors"
+                                        title={showLicenseKey ? "Sembunyikan" : "Tampilkan"}
+                                    >
+                                        {showLicenseKey ? <EyeOffIcon /> : <EyeIcon />}
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 text-xs text-yellow-800">
+                                Lisensi ini tersimpan di browser ini. Jika Anda membersihkan cache atau ganti perangkat, Anda perlu memasukkannya lagi.
+                            </div>
+
+                            <div className="flex justify-end pt-2">
+                                <button 
+                                    onClick={handleDeactivateLicense}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg text-xs font-bold transition-colors border border-transparent hover:border-red-100"
+                                >
+                                    Hapus Lisensi dari Perangkat Ini
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="p-6 space-y-6">
                     <div>
@@ -1663,6 +1744,7 @@ export default function App() {
             </div>
         </div>
     );
+    }
 
     const renderHelp = () => (
          <div className="max-w-3xl mx-auto animate-toastIn pb-10">
