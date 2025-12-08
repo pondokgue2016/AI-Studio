@@ -302,6 +302,9 @@ export default function App() {
     const [licenseInput, setLicenseInput] = useState('');
     const [showAdminGenerator, setShowAdminGenerator] = useState(false);
     const [generatedKey, setGeneratedKey] = useState('');
+    
+    // Reference for license input
+    const licenseInputRef = useRef<HTMLInputElement>(null);
 
     // User Profile State
     const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -354,7 +357,7 @@ export default function App() {
     // Check License Logic
     useEffect(() => {
         const savedLicense = localStorage.getItem('engageProLicense');
-        if (savedLicense && validateLicenseKey(savedLicense)) {
+        if (savedLicense && validateLicenseKey(window.atob(savedLicense))) {
             setIsLicensed(true);
         }
     }, []);
@@ -437,19 +440,40 @@ export default function App() {
     }, []);
 
     // License Handlers
-    const handleLicenseSubmit = () => {
+    const handleLicenseSubmit = async () => {
+        setIsLoading(true);
+        setLoadingMessage("Memverifikasi...");
+        
+        // Simulate network delay for premium feel
+        await new Promise(resolve => setTimeout(resolve, 800));
+
         if (validateLicenseKey(licenseInput.trim().toUpperCase())) {
             setIsLicensed(true);
-            localStorage.setItem('engageProLicense', licenseInput.trim().toUpperCase());
+            // ENCRYPT: Save as Base64 to obfuscate
+            localStorage.setItem('engageProLicense', window.btoa(licenseInput.trim().toUpperCase()));
             showToast("Lisensi Valid! Selamat Datang.", 'success');
         } else {
             showToast("Kode Lisensi Tidak Valid.", 'error');
         }
+        setIsLoading(false);
     };
 
     const handleGenerateKey = () => {
         const newKey = generateLicenseKey();
         setGeneratedKey(newKey);
+    };
+
+    const handlePasteLicense = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            setLicenseInput(text);
+            showToast("Berhasil ditempel!", 'success');
+        } catch (err) {
+            console.warn('Clipboard read permission denied, fallback to manual focus', err);
+            showToast("Akses clipboard diblokir browser. Silakan paste manual (Ctrl+V).", 'info');
+            // Fallback: Focus the input so they can type/paste
+            licenseInputRef.current?.focus();
+        }
     };
 
     const handleStyleSelect = useCallback((style: ContentStyle) => {
@@ -1012,18 +1036,30 @@ export default function App() {
                     <p className="text-gray-500 text-sm mb-6">Masukkan kode lisensi produk Anda untuk melanjutkan.</p>
                     
                     <div className="space-y-4">
-                        <input 
-                            type="text" 
-                            value={licenseInput}
-                            onChange={(e) => setLicenseInput(e.target.value)}
-                            placeholder="PRO-XXXX-XXXX"
-                            className="w-full text-center tracking-widest px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase font-mono"
-                        />
+                        <div className="flex gap-2">
+                             <input 
+                                ref={licenseInputRef}
+                                type="text" 
+                                value={licenseInput}
+                                onChange={(e) => setLicenseInput(e.target.value)}
+                                placeholder="PRO-XXXX-XXXX"
+                                className="w-full text-center tracking-widest px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase font-mono"
+                            />
+                            <button 
+                                onClick={handlePasteLicense}
+                                className="bg-gray-100 px-4 rounded-xl hover:bg-gray-200 transition-colors text-gray-600"
+                                title="Paste"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                            </button>
+                        </div>
+                        
                         <button 
                             onClick={handleLicenseSubmit}
-                            className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md"
+                            disabled={isLoading}
+                            className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md flex items-center justify-center gap-2"
                         >
-                            Aktivasi Lisensi
+                            {isLoading ? <SpinnerIcon /> : "Aktivasi Lisensi"}
                         </button>
                     </div>
 
@@ -1038,7 +1074,7 @@ export default function App() {
                             Beli Lisensi Disini <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                         </a>
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-800 leading-relaxed">
-                            🎁 <strong>Promo Spesial:</strong> Gunakan kode kupon <code className="bg-yellow-100 px-1.5 py-0.5 rounded border border-yellow-200 font-mono font-bold text-yellow-900 mx-1">engageearly</code> untuk diskon <span className="font-bold text-red-600">Rp 150.000</span>.
+                            🎁 <strong>Promo Spesial:</strong> Gunakan kode kupon <code className="bg-yellow-100 px-1.5 py-0.5 rounded border border-yellow-200 font-mono font-bold text-yellow-900 mx-1">earlyengage</code> untuk diskon <span className="font-bold text-red-600">Rp 150.000</span>.
                         </div>
                     </div>
 
