@@ -258,6 +258,38 @@ const FileInput: React.FC<FileInputProps> = ({ id, label, files, onFilesChange, 
 
 // --- Main App Component ---
 
+// LICENSE LOGIC HELPER
+const PREFIX = 'PRO';
+const generateLicenseKey = () => {
+    // Generate 4 Random Chars
+    const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase(); 
+    // Calculate Checksum: (Sum of ASCII values) * 7 -> Hexadecimal
+    let sum = 0;
+    for(let i=0; i<randomPart.length; i++) {
+        sum += randomPart.charCodeAt(i);
+    }
+    const checkSum = (sum * 7).toString(16).toUpperCase();
+    return `${PREFIX}-${randomPart}-${checkSum}`;
+};
+
+const validateLicenseKey = (key: string) => {
+    if (!key) return false;
+    const parts = key.split('-');
+    if (parts.length !== 3 || parts[0] !== PREFIX) return false;
+    
+    const randomPart = parts[1];
+    const checkSum = parts[2];
+    
+    let sum = 0;
+    for(let i=0; i<randomPart.length; i++) {
+        sum += randomPart.charCodeAt(i);
+    }
+    const expectedCheckSum = (sum * 7).toString(16).toUpperCase();
+    
+    return checkSum === expectedCheckSum;
+};
+
+
 export default function App() {
     // --- State ---
     const [currentView, setCurrentView] = useState<AppView>('dashboard');
@@ -265,6 +297,12 @@ export default function App() {
     const [isStrategyMenuOpen, setIsStrategyMenuOpen] = useState(true);
     const [isPromptLabMenuOpen, setIsPromptLabMenuOpen] = useState(true);
     
+    // License State
+    const [isLicensed, setIsLicensed] = useState(false);
+    const [licenseInput, setLicenseInput] = useState('');
+    const [showAdminGenerator, setShowAdminGenerator] = useState(false);
+    const [generatedKey, setGeneratedKey] = useState('');
+
     // User Profile State
     const [userProfile, setUserProfile] = useState<UserProfile>({
         name: 'Creator',
@@ -313,6 +351,22 @@ export default function App() {
 
     // --- Effects ---
     
+    // Check License Logic
+    useEffect(() => {
+        const savedLicense = localStorage.getItem('engageProLicense');
+        if (savedLicense && validateLicenseKey(savedLicense)) {
+            setIsLicensed(true);
+        }
+    }, []);
+
+    // Check for Admin URL Parameter
+    useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.get('mode') === 'pinturahasia') {
+            setShowAdminGenerator(true);
+        }
+    }, []);
+
     // Load Profile & History
     useEffect(() => {
         const storedProfile = localStorage.getItem('engageProProfile');
@@ -381,6 +435,22 @@ export default function App() {
             setToasts(prev => prev.filter(toast => toast.id !== id));
         }, 5000);
     }, []);
+
+    // License Handlers
+    const handleLicenseSubmit = () => {
+        if (validateLicenseKey(licenseInput.trim().toUpperCase())) {
+            setIsLicensed(true);
+            localStorage.setItem('engageProLicense', licenseInput.trim().toUpperCase());
+            showToast("Lisensi Valid! Selamat Datang.", 'success');
+        } else {
+            showToast("Kode Lisensi Tidak Valid.", 'error');
+        }
+    };
+
+    const handleGenerateKey = () => {
+        const newKey = generateLicenseKey();
+        setGeneratedKey(newKey);
+    };
 
     const handleStyleSelect = useCallback((style: ContentStyle) => {
         setSelectedStyle(style);
@@ -929,6 +999,69 @@ export default function App() {
     const currentStyleDesc = selectedStyle ? CONTENT_STYLES.find(s => s.id === selectedStyle)?.description : '';
 
     // --- RENDERERS ---
+
+    // License Gate Renderer
+    if (!isLicensed) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-gray-100">
+                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg mb-6">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">EngagePro AI Studio</h2>
+                    <p className="text-gray-500 text-sm mb-6">Masukkan kode lisensi produk Anda untuk melanjutkan.</p>
+                    
+                    <div className="space-y-4">
+                        <input 
+                            type="text" 
+                            value={licenseInput}
+                            onChange={(e) => setLicenseInput(e.target.value)}
+                            placeholder="PRO-XXXX-XXXX"
+                            className="w-full text-center tracking-widest px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase font-mono"
+                        />
+                        <button 
+                            onClick={handleLicenseSubmit}
+                            className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md"
+                        >
+                            Aktivasi Lisensi
+                        </button>
+                    </div>
+
+                    <div className="mt-8 text-xs text-gray-400 select-none">
+                        Version {APP_VERSION}
+                    </div>
+                </div>
+
+                {/* Secret Admin Generator Modal */}
+                {showAdminGenerator && (
+                    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+                            <h3 className="font-bold text-gray-900 mb-4">Admin License Generator</h3>
+                            <div className="bg-gray-100 p-4 rounded text-center font-mono text-lg font-bold mb-4 tracking-widest select-all">
+                                {generatedKey || "Click Generate"}
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={handleGenerateKey} className="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700">Generate New Key</button>
+                                {generatedKey && (
+                                    <button onClick={() => navigator.clipboard.writeText(generatedKey)} className="bg-gray-200 text-gray-700 px-4 rounded hover:bg-gray-300">Copy</button>
+                                )}
+                            </div>
+                            <button onClick={() => setShowAdminGenerator(false)} className="mt-4 text-xs text-gray-500 hover:text-gray-800 w-full text-center">Close Admin</button>
+                        </div>
+                    </div>
+                )}
+                
+                {/* Toast Container for Gate */}
+                <div className="fixed bottom-6 right-6 z-50 space-y-2 w-full max-w-sm pointer-events-none">
+                    {toasts.map(toast => (
+                        <div key={toast.id} className={`pointer-events-auto bg-white border-l-4 ${toast.type === 'error' ? 'border-red-500' : toast.type === 'success' ? 'border-green-500' : 'border-blue-500'} shadow-lg rounded-r-lg p-4 flex items-center animate-toastIn`}>
+                            <div className="flex-1 text-sm font-medium text-gray-900">{toast.message}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
 
     const renderSidebar = () => (
         <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#111827] text-gray-100 transition-transform duration-300 transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
