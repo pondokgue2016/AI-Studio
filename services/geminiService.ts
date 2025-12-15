@@ -176,6 +176,8 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
             3. **Creative:** Komposisi artistik (Floating, Flatlay, Geometris).
             4. **Detail:** Close-up texture shot (Macro).
             
+            PENTING: 'shotPrompts' HARUS berisi 4 item array string yang menjelaskan visual gambar secara detail sesuai variasi di atas.
+            
             Akhiri setiap prompt dengan: "${imageQualityPrompt}, ${posterVibe}, clean composition, negative space for text".
         `;
         return { systemInstruction, userQuery, useGoogleSearch };
@@ -330,6 +332,11 @@ export async function generateSingleImage(prompt: string, referenceParts: Part[]
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash-image', // Nano Banana for image gen
             contents: { parts: parts },
+            config: {
+                imageConfig: {
+                    aspectRatio: orientation
+                }
+            }
         });
 
         // Extract image

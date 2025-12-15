@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { CONTENT_STYLES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_MULTIPLE_FILES, TTS_VOICES, SCRIPT_STYLES, LANGUAGES, ORIENTATIONS, APP_VERSION } from './constants';
 import { ContentStyle, GeneratedContentState, ToastMessage, UploadedFile, UploadedFilesState, GeneratedImage, ScriptStyle, AppView, UserProfile, HistoryItem } from './types';
@@ -656,9 +655,20 @@ export default function App() {
             return;
         }
 
-        const descriptionlessStyles: ContentStyle[] = ['fashion_broll', 'treadmill_fashion_show', 'aesthetic_hands_on'];
+        // VALIDATION FOR POSTER
+        if (selectedStyle && selectedStyle.startsWith('poster_') && !uploadedFiles.product) {
+            showToast("Silakan upload foto produk terlebih dahulu.", 'warning');
+            return;
+        }
+
+        const descriptionlessStyles: ContentStyle[] = [
+            'fashion_broll', 'treadmill_fashion_show', 'aesthetic_hands_on',
+            'poster_food', 'poster_beauty', 'poster_tech', 'poster_property'
+        ];
         const currentDescription = ['travel', 'property'].includes(selectedStyle) ? travelDescription : description;
-        if (!currentDescription && !descriptionlessStyles.includes(selectedStyle)) {
+        
+        // Validation: If NOT in descriptionlessStyles AND description is empty -> Alert
+        if (!descriptionlessStyles.includes(selectedStyle) && !currentDescription) {
              showToast("Harap masukkan Deskripsi Teks.", 'error');
              return;
         }
