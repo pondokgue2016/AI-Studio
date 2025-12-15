@@ -1,17 +1,31 @@
 
 import { ContentStyle, ScriptStyle } from './types';
 
-export const APP_VERSION = 'v2.4';
+export const APP_VERSION = 'v2.5';
 
-export const CONTENT_STYLES: { id: ContentStyle; name: string; description: string }[] = [
-    { id: 'direct', name: 'Presentasi Produk', description: 'Fokus pada solusi & manfaat produk.' },
-    { id: 'quick_review', name: 'Review Cepat', description: 'Testimoni singkat & padat.' },
-    { id: 'treadmill_fashion_show', name: 'Treadmill Fashion', description: 'Model berjalan estetik.' },
-    { id: 'fashion_broll', name: 'Fashion B-Roll', description: 'Pose variatif untuk outfit.' },
-    { id: 'travel', name: 'Promo Travel', description: 'Eksplorasi lokasi & suasana.' },
-    { id: 'property', name: 'Promo Properti', description: 'Tur ruangan & arsitektur.' },
-    { id: 'aesthetic_hands_on', name: 'Aesthetic POV', description: 'Sudut pandang tangan (POV).' },
-    { id: 'food_promo', name: 'Food Vlogger', description: 'Review makanan menggugah selera.' },
+export interface ContentStyleConfig {
+    id: ContentStyle;
+    name: string;
+    description: string;
+    category: 'video' | 'photo';
+}
+
+export const CONTENT_STYLES: ContentStyleConfig[] = [
+    // VIDEO STYLES
+    { id: 'direct', name: 'Presentasi Produk', description: 'Fokus pada solusi & manfaat produk.', category: 'video' },
+    { id: 'quick_review', name: 'Review Cepat', description: 'Testimoni singkat & padat.', category: 'video' },
+    { id: 'treadmill_fashion_show', name: 'Treadmill Fashion', description: 'Model berjalan estetik.', category: 'video' },
+    { id: 'fashion_broll', name: 'Fashion B-Roll', description: 'Pose variatif untuk outfit.', category: 'video' },
+    { id: 'travel', name: 'Promo Travel', description: 'Eksplorasi lokasi & suasana.', category: 'video' },
+    { id: 'property', name: 'Promo Properti', description: 'Tur ruangan & arsitektur.', category: 'video' },
+    { id: 'aesthetic_hands_on', name: 'Aesthetic POV', description: 'Sudut pandang tangan (POV).', category: 'video' },
+    { id: 'food_promo', name: 'Food Vlogger', description: 'Review makanan menggugah selera.', category: 'video' },
+
+    // PHOTO / POSTER STYLES (NEW v2.5)
+    { id: 'poster_food', name: 'F&B Poster', description: 'Foto makanan menggugah selera (Appetite Appeal).', category: 'photo' },
+    { id: 'poster_beauty', name: 'Beauty & Skincare', description: 'Elegan, lembut, tekstur organik.', category: 'photo' },
+    { id: 'poster_tech', name: 'Techno & Gadget', description: 'Futuristik, neon rim light, sleek.', category: 'photo' },
+    { id: 'poster_property', name: 'Interior & Home', description: 'Luas, nyaman, pencahayaan natural.', category: 'photo' },
 ];
 
 export const SCRIPT_STYLES: { id: ScriptStyle; name: string }[] = [
@@ -29,7 +43,16 @@ export const LANGUAGES: { id: string; name: string }[] = [
     { id: 'en-US', name: 'English' },
 ];
 
+// Reusable flow for all Poster types
+const POSTER_FLOW = [
+    { id: "hero", label: "1. Hero Shot (Produk Utama)" },
+    { id: "lifestyle", label: "2. Lifestyle (Penggunaan)" },
+    { id: "creative", label: "3. Creative Art (Floating/Flatlay)" },
+    { id: "detail", label: "4. Macro Detail (Tekstur)" }
+];
+
 export const STORY_FLOWS: Record<ContentStyle, { id: string; label: string }[]> = {
+    // Video Flows
     direct: [
         { id: "problem", label: "Masalah (Problem)" },
         { id: "reveal", label: "Produk (Reveal)" },
@@ -81,7 +104,13 @@ export const STORY_FLOWS: Record<ContentStyle, { id: string; label: string }[]> 
         { id: 'action', label: 'Gigitan Pertama (Action)' },
         { id: 'reaction', label: 'Reaksi Emosional' },
         { id: 'cta', label: 'Ajakan & Produk (CTA)' }
-    ]
+    ],
+
+    // Poster Flows (Unified)
+    poster_food: POSTER_FLOW,
+    poster_beauty: POSTER_FLOW,
+    poster_tech: POSTER_FLOW,
+    poster_property: POSTER_FLOW,
 };
 
 export const TTS_VOICES: { value: string; label: string }[] = [

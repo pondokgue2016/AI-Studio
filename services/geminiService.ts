@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Modality, Part } from "@google/genai";
-import { ContentStyle, UploadedFile, UploadedFilesState, CreativePlan, UserProfile } from '../types';
+import { ContentStyle, UploadedFile, UploadedFilesState, CreativePlan, UserProfile, GeneratedImage } from '../types';
 import { STORY_FLOWS } from '../constants';
 
 // --- API Key Utility ---
@@ -100,8 +101,6 @@ function pcmToWav(pcmData: Int16Array, numChannels: number, sampleRate: number):
 // --- Gemini API Service ---
 
 function buildCreativePlanPayload(style: ContentStyle, lang: string, description: string, scriptStyle: string, orientation: string, userProfile?: UserProfile) {
-    let systemInstruction = "";
-    
     // Construct Brand Persona Prompt Segment
     const brandPersonaPrompt = userProfile?.brandName ? `
         === BRAND PERSONA (WAJIB DIIKUTI) ===
@@ -111,7 +110,7 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
         
         INSTRUKSI NASKAH:
         Gunakan "Tone of Voice" di atas saat menulis 'tiktokScript'. Sesuaikan gaya bahasa agar relevan dengan 'Target Audience'.
-        Sebutkan nama brand "${userProfile.brandName}" secara natural di dalam naskah jika relevan.
+        Sebutkan nama brand "${userProfile.brandName}" secara natural.
     ` : `
         === BRAND PERSONA ===
         Gunakan tone of voice yang sesuai dengan gaya naskah '${scriptStyle}'.
@@ -124,6 +123,8 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
         Tugas: Hasilkan JSON rencana kreatif.
     `;
     let useGoogleSearch = false;
+    
+    const isPosterMode = style.startsWith('poster_');
     const shots = (style === 'treadmill_fashion_show') 
         ? `1 shot base prompt` 
         : `${STORY_FLOWS[style].length} shots (${STORY_FLOWS[style].map(s => s.label).join(', ')})`;
@@ -132,21 +133,9 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
 
     // Improved Instruction for Visual Consistency (The Visual Anchor)
     const baseSystemInstruction = `
-        Anda adalah AI Creative Director. Tugas Anda adalah membuat rencana konten (storyboard) untuk affiliate marketing.
+        Anda adalah AI Creative Director. Tugas Anda adalah membuat rencana konten (storyboard atau poster set) untuk affiliate marketing.
         
         ${brandPersonaPrompt}
-
-        ATURAN UTAMA (VISUAL CONSISTENCY IS KING):
-        Masalah utama dalam AI video adalah model yang berubah-ubah. Anda HARUS memperbaikinya dengan teknik "VISUAL ANCHOR".
-        
-        1.  **ANALISIS:** Pertama, lihat 'Aset Utama' dan 'Foto Model' (jika ada). Ciptakan deskripsi visual yang SANGAT SPESIFIK untuk Karakter (Wajah, Rambut, Umur, Ras) dan Pakaian (Warna, Jenis, Tekstur).
-        2.  **PENGULANGAN (WAJIB):** Anda HARUS menyalin-tempel deskripsi visual karakter dan pakaian tersebut ke DALAM SETIAP STRING di array 'shotPrompts'.
-        3.  **STRUKTUR PROMPT:** Setiap prompt dalam 'shotPrompts' HARUS mengikuti struktur ini:
-            "[Karakter Deskripsi Lengkap] wearing [Pakaian Deskripsi Lengkap] in [Lokasi Deskripsi], [Action/Pose specific to the shot], [Camera Angle], [Lighting]."
-        
-        CONTOH STRUKTUR YANG BENAR:
-        "A 25yo Indonesian woman with long black wavy hair and soft makeup, wearing a beige linen blazer and white t-shirt, sitting in a modern bright living room, holding the serum bottle up to her cheek, close up shot, soft natural lighting."
-        (Perhatikan bagaimana deskripsi wanita dan pakaian diulang secara eksplisit).
 
         ATURAN OUTPUT JSON:
         1.  Hasilkan HANYA satu blok JSON yang valid.
@@ -154,6 +143,46 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
         3.  Metadata 'keywords' (5-7 kata) & 'description' (judul pendek) harus dalam bahasa: ${lang}.
     `;
 
+    // --- POSTER LOGIC ---
+    if (isPosterMode) {
+        let posterVibe = "";
+        switch (style) {
+            case 'poster_food':
+                posterVibe = "Appetite Appeal, Fresh, Steam/Water Droplets, Warm Lighting, Delicious.";
+                break;
+            case 'poster_beauty':
+                posterVibe = "Elegant, Soft Lighting, Pastel Colors, Organic Textures (Water/Flowers), Pure.";
+                break;
+            case 'poster_tech':
+                posterVibe = "Futuristic, Neon Rim Light, Dark Background, Floating Product, Sleek.";
+                break;
+            case 'poster_property':
+                posterVibe = "Spacious, Natural Sunlight, Clean Lines, Cozy, Architectural Symmetry.";
+                break;
+        }
+
+        const systemInstruction = `${baseSystemInstruction}
+            GAYA: PHOTO STUDIO / POSTER MAKER (${posterVibe}).
+            
+            INSTRUKSI UTAMA (CLEAN BACKGROUND & TAGLINE):
+            1. **BACKGROUND BERSIH:** User ingin membuat poster. Prompt gambar HARUS meminta "Minimalist Background" dan "Negative Space" (ruang kosong) di bagian atas atau samping agar user bisa menambahkan teks/logo dengan mudah. Hindari background yang terlalu ramai (cluttered).
+            2. **TAGLINE GENERATOR:** Di field 'tiktokScript', JANGAN buat naskah video panjang. GANTI dengan format ini:
+               "HEADLINE: [Buat Tagline Pendek & Catchy 3-5 Kata]
+                CAPTION: [Buat Caption Instagram yang menarik]"
+            
+            INSTRUKSI SHOT PROMPTS (4 VARIASI):
+            1. **Hero Shot:** Produk di tengah, lighting dramatis, background bersih.
+            2. **Lifestyle:** Produk di lingkungan natural (misal: di meja makan, di wastafel, di tangan).
+            3. **Creative:** Komposisi artistik (Floating, Flatlay, Geometris).
+            4. **Detail:** Close-up texture shot (Macro).
+            
+            Akhiri setiap prompt dengan: "${imageQualityPrompt}, ${posterVibe}, clean composition, negative space for text".
+        `;
+        return { systemInstruction, userQuery, useGoogleSearch };
+    }
+
+    // --- VIDEO LOGIC (EXISTING) ---
+    let systemInstruction = "";
     switch (style) {
         case 'direct':
         case 'quick_review':
@@ -161,340 +190,255 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
                 GAYA: DIRECT SELLING / REVIEW.
                 
                 INSTRUKSI KHUSUS:
-                1. **KONSISTENSI KARAKTER & BAJU:** Jika user mengupload 'Foto Model', deskripsikan dia secara detil (misal: "Indonesian man with short buzz cut, wearing black hoodie"). Jika tidak, buat karakter generik. Deskripsi ini HARUS DIULANG di Shot 1, Shot 2, Shot 3, dst. Jangan pernah hanya menulis "The man" atau "He". Tulis deskripsi fisiknya lagi.
-                2. **KONSISTENSI LOKASI:** Tentukan satu lokasi yang logis (misal: kamar tidur, dapur, kantor). Ulangi deskripsi lokasi ini di setiap shot.
-                3. **FOKUS PRODUK:** Pastikan produk terlihat jelas.
+                1. **KONSISTENSI KARAKTER & BAJU:** Jika user mengupload 'Foto Model', deskripsikan dia secara detil. Ulangi deskripsi ini di setiap Shot.
+                2. **KONSISTENSI LOKASI:** Tentukan satu lokasi yang logis.
                 
                 DETAIL NASKAH (tiktokScript): Buat naskah dalam ${lang} (40-60 kata) dengan gaya soft selling.
-                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}. Ingat: Copy-paste deskripsi karakter & pakaian di setiap prompt. Akhiri setiap prompt dengan "${imageQualityPrompt}".`;
+                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}. Akhiri dengan "${imageQualityPrompt}".`;
             break;
         case 'fashion_broll':
              systemInstruction = `${baseSystemInstruction}
                 GAYA: FASHION B-ROLL.
-                
                 INSTRUKSI KHUSUS:
-                1. **BAJU ADALAH RAJA:** 'Aset Utama' adalah pakaian. Deskripsikan pakaian itu dengan detail obsesif (Warna, jenis kain, bentuk kerah, panjang lengan). Deskripsi ini HARUS ADA di setiap shot.
-                2. **KARAKTER:** Wajah dan gaya rambut model HARUS 100% konsisten. Tentukan gaya rambut (misal: "Loose curly hair", "High ponytail") dan kuncir itu untuk semua prompt.
-                3. **BACKGROUND:** Gunakan deskripsi 'Gambar Latar' jika ada, atau buat studio minimalis. Background harus konsisten.
+                1. **BAJU ADALAH RAJA:** Deskripsikan pakaian dengan detail obsesif.
+                2. **KARAKTER:** Wajah dan gaya rambut model HARUS 100% konsisten.
                 
                 DETAIL NASKAH (tiktokScript): String KOSONG ("").
-                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan 5 prompt sesuai alur 'Fashion B-Roll'. Prompt hanya mengubah POSE dan ANGLE (misal: Walking towards camera, looking over shoulder, adjusting sleeve). Deskripsi fisik & baju TETAP SAMA. Akhiri dengan "${imageQualityPrompt}, fashion photography lighting".`;
+                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan 5 prompt variasi POSE dan ANGLE. Akhiri dengan "${imageQualityPrompt}, fashion photography lighting".`;
             break;
         case 'treadmill_fashion_show':
              systemInstruction = `${baseSystemInstruction}
                 GAYA: TREADMILL FASHION SHOW.
-                
                 INSTRUKSI KHUSUS:
-                1. Konsistensi sangat mudah disini karena hanya 1 base prompt.
-                2. Pastikan prompt mendeskripsikan: "Full body shot of [Character Description] walking confidently on a treadmill, facing forward."
-                3. Lokasi: Studio atau Gym yang bersih dan estetik.
+                1. Prompt mendeskripsikan: "Full body shot of [Character Description] walking confidently on a treadmill, facing forward."
                 
                 DETAIL NASKAH (tiktokScript): String KOSONG ("").
-                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan HANYA 1 prompt dasar yang sangat detail. Prompt ini akan digunakan berulang oleh sistem. Akhiri dengan "${imageQualityPrompt}".`;
+                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan HANYA 1 prompt dasar yang sangat detail. Akhiri dengan "${imageQualityPrompt}".`;
             break;
         case 'travel':
             systemInstruction = `${baseSystemInstruction}
                 GAYA: TRAVEL VLOG.
-                
                 INSTRUKSI KHUSUS:
-                1. **LOKASI:** Prioritaskan akurasi visual lokasi berdasarkan 'Aset Utama' dan hasil Google Search.
-                2. **KARAKTER:** Tambahkan "Back view of [Character]" atau "Wide shot of [Character]" untuk memberi skala pada pemandangan. Konsistensi pakaian karakter tetap wajib dijaga (misal: selalu pakai Topi Putih dan Dress Biru).
+                1. **LOKASI:** Prioritaskan akurasi visual lokasi.
+                2. **KARAKTER:** Tambahkan karakter untuk skala.
                 
                 DETAIL NASKAH (tiktokScript): Naskah ${lang} (40-60 kata). Gunakan fakta lokasi.
-                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}. Setiap prompt harus menggabungkan keindahan lokasi DAN kehadiran karakter yang konsisten. Akhiri dengan "${imageQualityPrompt}, natural sunlight".`;
+                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}. Akhiri dengan "${imageQualityPrompt}, natural sunlight".`;
             userQuery = `Gaya Konten: ${style}\n(Gunakan Google Search untuk menemukan info visual lokasi ini).\n${userQuery}`;
             useGoogleSearch = true;
             break;
         case 'property':
              systemInstruction = `${baseSystemInstruction}
                 GAYA: PROMO PROPERTI.
-                
                 INSTRUKSI KHUSUS:
                 1. **JANGAN UBAH PROPERTI:** Prompt harus fokus pada "A realistic photo of the provided room...".
-                2. **MANUSIA:** Tambahkan manusia untuk skala. "A [Detailed Character] sitting on the sofa...". Pastikan karakter ini (baju/rambut) konsisten jika muncul di beberapa shot.
+                2. **MANUSIA:** Tambahkan manusia untuk skala.
                 
                 DETAIL NASKAH (tiktokScript): Naskah ${lang} (40-60 kata).
-                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}. Setiap prompt dimulai dengan "Adding [Character] to the scene: ". Akhiri dengan "keep architecture unchanged. ${imageQualityPrompt}".`;
+                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}. Akhiri dengan "keep architecture unchanged. ${imageQualityPrompt}".`;
             userQuery = `Gaya Konten: ${style}\n(Gunakan Google Search untuk info properti).\n${userQuery}`;
             useGoogleSearch = true;
             break;
         case 'aesthetic_hands_on':
              systemInstruction = `${baseSystemInstruction}
                 GAYA: AESTHETIC HANDS ON (POV).
-                
                 INSTRUKSI KHUSUS:
-                1. **SHOT 1 ADALAH KUNCI (POV HOLDING):** Shot pertama WAJIB First Person Point of View (POV) melihat tangan sendiri memegang produk ke arah kamera (holding up the product).
-                2. **SHOT 2-5 (VARIASI):** Shot selanjutnya TIDAK HARUS pose "holding up". Fokus pada interaksi tekstur, pemakaian (using), dan peletakan (placing) yang natural.
-                3. **ESTETIKA TANGAN:** Deskripsikan tangan yang estetik (contoh: "Woman's hand with nude almond-shaped nails and rings").
-                
-                **STRUKTUR PROMPT:**
-                   - Shot 1: "POV shot looking down at own hand holding the [Product] up to the camera against [Background]. Focus on the elegant grip and product details."
-                   - Shot 2: "Close-up shot of hand touching/interacting with the texture of [Product]..."
-                   - Shot 3: "Shot of hand using the [Product] functionality in a natural way..."
-                   - Shot 4: "Shot showing the [Product] placed aesthetically next to related lifestyle items (pairing)..."
-                   - Shot 5: "Wide angle shot of the [Product] in a lifestyle setting / experience..."
+                1. **SHOT 1 ADALAH KUNCI (POV HOLDING):** Shot pertama WAJIB First Person Point of View (POV) tangan memegang produk dengan estetik.
+                2. **VARIASI SHOT:** Shot berikutnya fokus pada tekstur, penggunaan, dan pairing.
                 
                 DETAIL NASKAH (tiktokScript): String KOSONG ("").
-                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan 5 prompt. Prompt 1 WAJIB POV Holding. Prompt lain variasi estetik. Akhiri dengan "${imageQualityPrompt}, macro photography, soft ethereal lighting".`;
+                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan 5 prompt. Akhiri dengan "${imageQualityPrompt}, pov photography".`;
             break;
         case 'food_promo':
              systemInstruction = `${baseSystemInstruction}
-                GAYA: FOOD VLOGGER (CINEMATIC COMMERCIAL).
-                
+                GAYA: FOOD VLOGGER / REVIEW MAKANAN.
                 INSTRUKSI KHUSUS:
-                1. **KARAKTER (VISUAL ANCHOR):** Tentukan deskripsi fisik Food Vlogger (Wajah, Rambut, Baju).
+                1. **APPETITE APPEAL:** Makanan harus terlihat sangat lezat, berminyak (jika relevan), uap panas, dll.
+                2. **REAKSI:** Sertakan shot orang makan dengan ekspresi nikmat.
                 
-                2. **EVOLUSI MAKANAN (REALISME & PROGRESSION):**
-                   - Shot 1: Makanan UTUH & PERFECT. Vlogger memegangnya.
-                   - Shot 2: **SCENE IKLAN (COMMERCIAL):** HANYA MAKANAN (No Humans). Close-up super detail, seperti iklan TV. Lighting dramatis. Gunakan background jika ada.
-                   - Shot 3: BIG BITE. Vlogger menggigit besar.
-                   - Shot 4: BITE MARK. Makanan sudah tergigit. Tekstur dalam terlihat.
-                   - Shot 5: HALF EATEN. Makanan tinggal setengah.
-                
-                DETAIL NASKAH (tiktokScript): Naskah ${lang} (40-60 kata), menggugah selera.
-                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}.
-                - Shot 1: "Medium shot of [Character Description] holding the WHOLE PERFECT [Food] up to the camera, in [Location]..."
-                - Shot 2: "Cinematic Commercial Food Photography of the [Food] on a table. Extreme close-up, steam rising, water droplets, fresh ingredients visible. NO PEOPLE. Dramatic studio lighting. 8k resolution, advertising standard."
-                - Shot 3: "Close up shot of [Character Description] taking a HUGE enthusiastic bite of the [Food], eyes closed in enjoyment..."
-                - Shot 4: "Medium shot of [Character Description] holding the [Food] which now has a VISIBLE LARGE BITE MARK, showing the delicious filling/texture inside..."
-                - Shot 5: "[Character Description] holding the HALF-EATEN [Food], giving a thumbs up..."
-                Akhiri setiap prompt dengan "${imageQualityPrompt}, delicious, food porn".`;
+                DETAIL NASKAH (tiktokScript): Naskah ${lang} (40-60 kata) gaya influencer lapar.
+                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}. Akhiri dengan "${imageQualityPrompt}, food photography, macro depth of field".`;
             break;
     }
+
     return { systemInstruction, userQuery, useGoogleSearch };
 }
 
-export async function getCreativePlan(style: ContentStyle, files: UploadedFilesState, description: string, language: string, scriptStyle: string, orientation: string, userProfile?: UserProfile): Promise<CreativePlan> {
-    const apiKey = getApiKey();
-    if (!apiKey) throw new Error("API Key tidak ditemukan. Pastikan Anda telah memasukkan API Key.");
+export async function getCreativePlan(
+    style: ContentStyle, 
+    files: UploadedFilesState, 
+    description: string, 
+    lang: string, 
+    scriptStyle: string,
+    orientation: string,
+    userProfile?: UserProfile
+): Promise<CreativePlan> {
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
-    const ai = new GoogleGenAI({ apiKey });
-    const langTextMap: { [key: string]: string } = {
-        'id-ID': 'Bahasa Indonesia',
-        'ms-MY': 'Bahasa Melayu',
-        'en-US': 'English'
-    };
-    const langText = langTextMap[language] || 'Bahasa Indonesia';
-    // Pass userProfile to buildCreativePlanPayload
-    const { systemInstruction, userQuery, useGoogleSearch } = buildCreativePlanPayload(style, langText, description, scriptStyle, orientation, userProfile);
-    
-    const imageParts: Part[] = [];
+    // 1. Build Payload
+    const { systemInstruction, userQuery, useGoogleSearch } = buildCreativePlanPayload(style, lang, description, scriptStyle, orientation, userProfile);
 
-    // Main Asset (Product for most, Locations for travel/property/food)
-    if (files.product) imageParts.push({ text: "Aset Utama (Produk):" }, { inlineData: { mimeType: files.product.type, data: files.product.data }});
-    files.locations.forEach((f, i) => imageParts.push({ text: `Aset Utama (Lokasi/Properti/Makanan) ${i+1}:` }, { inlineData: { mimeType: f.type, data: f.data }}));
+    // 2. Prepare visual context from uploaded files (Vision capabilities)
+    // We send the first available image to help Gemini understand what the product looks like
+    const contextParts: Part[] = [];
+    contextParts.push({ text: userQuery });
     
-    // Fashion items are also main assets for treadmill style
-    files.fashionItems.forEach((f, i) => imageParts.push({ text: `Aset Utama (Item Fashion) ${i+1}:` }, { inlineData: { mimeType: f.type, data: f.data }}));
+    if (files.product) {
+        contextParts.push({ text: "Ini adalah gambar produk utama:" });
+        contextParts.push({ inlineData: { mimeType: files.product.type, data: files.product.data } });
+    } else if (files.locations && files.locations.length > 0) {
+        contextParts.push({ text: "Ini adalah gambar lokasi/properti/makanan:" });
+        contextParts.push({ inlineData: { mimeType: files.locations[0].type, data: files.locations[0].data } });
+    } else if (files.fashionItems && files.fashionItems.length > 0) {
+        contextParts.push({ text: "Ini adalah item fashion utama:" });
+        contextParts.push({ inlineData: { mimeType: files.fashionItems[0].type, data: files.fashionItems[0].data } });
+    }
 
-    // Common secondary assets
-    if (files.model) imageParts.push({ text: "Foto Model (Referensi Wajib untuk Wajah/Rambut/Baju):" }, { inlineData: { mimeType: files.model.type, data: files.model.data }});
-    if (files.background) imageParts.push({ text: "Gambar Latar:" }, { inlineData: { mimeType: files.background.type, data: files.background.data }});
-    
+    // 3. Configure Model
+    const modelId = useGoogleSearch ? 'gemini-3-pro-preview' : 'gemini-2.5-flash';
+    const tools = useGoogleSearch ? [{ googleSearch: {} }] : [];
+
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: { parts: [{ text: userQuery }, ...imageParts] },
+        model: modelId,
+        contents: { parts: contextParts },
         config: {
-            systemInstruction,
-            ...(useGoogleSearch ? { tools: [{ googleSearch: {} }] } : { responseMimeType: 'application/json' })
+            systemInstruction: systemInstruction,
+            responseMimeType: "application/json",
+            tools: tools
         }
     });
 
-    // Safety check for response.text
-    const rawText = response.text || "";
-    const textResponse = rawText.replace(/```json|```/g, "").trim();
     try {
-        if (!textResponse) throw new Error("Respons kosong dari AI");
-        return JSON.parse(textResponse) as CreativePlan;
+        const text = response.text || "{}";
+        // Clean up markdown code blocks if present
+        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const plan = JSON.parse(jsonStr) as CreativePlan;
+        return plan;
     } catch (e) {
-        console.error("Failed to parse Creative Plan JSON", textResponse);
+        console.error("Failed to parse Creative Plan JSON", e);
         throw new Error("Gagal membuat rencana kreatif. Silakan coba lagi.");
     }
 }
 
-export async function generateSingleImage(prompt: string, referenceParts: Part[], orientation: string): Promise<{ success: boolean; base64: string | null; error?: string }> {
-    const apiKey = getApiKey();
-    if (!apiKey) return { success: false, base64: null, error: "API Key Missing" };
+export async function generateSingleImage(prompt: string, referenceParts: Part[], orientation: string): Promise<GeneratedImage> {
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
-    const ai = new GoogleGenAI({ apiKey });
+    const parts: Part[] = [...referenceParts];
+    parts.push({ text: `Generate a photorealistic image based on this prompt: ${prompt}` });
+
     try {
-        // Add specific instruction to the image model to respect the reference images strongly
-        const strongPrompt = `${prompt} (Ensure high fidelity to the key features of the provided reference images. High quality, photorealistic, cinematic)`;
-        
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
-            contents: { parts: [{ text: strongPrompt }, ...referenceParts] },
-            config: { 
-                responseModalities: [Modality.IMAGE],
-                imageConfig: {
-                    aspectRatio: orientation // '9:16', '16:9', '1:1' match API specs
-                }
-            },
+            model: 'gemini-2.5-flash-image', // Nano Banana for image gen
+            contents: { parts: parts },
         });
 
+        // Extract image
+        // The guidelines say: iterate through parts.
         if (response.candidates && response.candidates[0].content && response.candidates[0].content.parts) {
             for (const part of response.candidates[0].content.parts) {
                 if (part.inlineData) {
-                    return { success: true, base64: part.inlineData.data };
+                    return {
+                        success: true,
+                        base64: part.inlineData.data,
+                        prompt: prompt
+                    };
                 }
             }
         }
-        return { success: false, base64: null, error: "No image data in response" };
-    } catch (error: any) {
-        console.error("Error generating single image:", error);
-        return { success: false, base64: null, error: error.message || "Unknown Error" };
+        return { success: false, base64: null, prompt, error: "No image data in response" };
+
+    } catch (e: any) {
+        console.error("Image Gen Error", e);
+        return { success: false, base64: null, prompt, error: e.message || "Unknown error" };
     }
 }
 
-export async function getAnimationPrompt(imagePrompt: string): Promise<string | null> {
-    const apiKey = getApiKey();
-    if (!apiKey) return null;
-    const ai = new GoogleGenAI({ apiKey });
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: `Berdasarkan prompt gambar ini: "${imagePrompt}", berikan 1 (SATU) saran animasi video yang deskriptif dan sinematik (sekitar 6-10 kata). Kombinasikan SATU gerakan kamera (cth: Slow Dolly In, Fast Pan Left) DAN SATU gerakan objek/karakter (cth: Model tersenyum, Produk berputar). Contoh: "Slow dolly in pada karakter yang tersenyum."`,
-        });
-        return (response.text || "").trim();
-    } catch (error) {
-        console.warn("Failed to get animation prompt:", error);
-        return null;
-    }
-}
-
-export async function translateScript(script: string, targetLangCode: string, scriptStyle: string): Promise<string> {
-    const apiKey = getApiKey();
-    if (!apiKey) throw new Error("API Key tidak ditemukan.");
-    const ai = new GoogleGenAI({ apiKey });
-    const langTextMap: { [key: string]: string } = {
-        'id-ID': 'Bahasa Indonesia',
-        'ms-MY': 'Bahasa Melayu',
-        'en-US': 'English'
-    };
-    const targetLang = langTextMap[targetLangCode] || 'Bahasa Indonesia';
+export async function getAnimationPrompt(imagePrompt: string): Promise<string> {
+    // Generate a prompt for video generators (Runway/Kling) based on the image prompt
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: `Terjemahkan naskah berikut ke ${targetLang} (kode: ${targetLangCode}). Jaga agar tetap singkat (sekitar 40-60 kata) dengan gaya soft selling untuk TikTok dan pertahankan nuansa gaya '${scriptStyle}'. Naskah: "${script}"`,
+        contents: `Create a concise motion prompt for an AI video generator based on this image description: "${imagePrompt}". 
+        Focus on camera movement (pan, zoom) and subject motion. Max 15 words. Example: "Slow pan right, subtle dust particles floating, cinematic lighting."`,
     });
-    return (response.text || "").trim();
+    return response.text?.trim() || "Cinematic slow motion";
 }
 
-export async function generateTTSAudio(script: string, langCode: string, voiceName: string): Promise<Blob> {
-    const apiKey = getApiKey();
-    if (!apiKey) throw new Error("API Key tidak ditemukan.");
-    const ai = new GoogleGenAI({ apiKey });
-    const ttsPrompt = `Ucapkan dalam bahasa ${langCode}: "${script}"`;
-    const response = await ai.models.generateContent({
+export async function generateTTSAudio(text: string, lang: string, voiceName: string): Promise<Blob> {
+     const ai = new GoogleGenAI({ apiKey: getApiKey() });
+     
+     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
-        contents: { parts: [{ text: ttsPrompt }] },
+        contents: { parts: [{ text: text }] },
         config: {
             responseModalities: [Modality.AUDIO],
             speechConfig: {
-                voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } },
-            },
-        },
+                voiceConfig: {
+                    prebuiltVoiceConfig: { voiceName: voiceName }
+                }
+            }
+        }
     });
 
-    const audioPart = response.candidates?.[0]?.content?.parts?.[0];
-    const audioData = audioPart?.inlineData?.data;
-    const mimeType = audioPart?.inlineData?.mimeType; // e.g., audio/L16;rate=24000
-
-    if (audioData && mimeType && mimeType.startsWith("audio/")) {
-        const sampleRateMatch = mimeType.match(/rate=(\d+)/);
-        if (!sampleRateMatch) throw new Error("Could not find sample rate in mimeType.");
-        
-        const sampleRate = parseInt(sampleRateMatch[1], 10);
-        const pcmData = base64ToArrayBuffer(audioData);
-        const pcm16 = new Int16Array(pcmData);
-        return pcmToWav(pcm16, 1, sampleRate);
-    } else {
-        throw new Error("Invalid audio response from API.");
-    }
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64Audio) throw new Error("Gagal generate audio");
+    
+    // Convert to WAV/Blob
+    const audioBuffer = base64ToArrayBuffer(base64Audio);
+    // The raw output is PCM. We need to wrap it in WAV container.
+    const pcmData = new Int16Array(audioBuffer);
+    return pcmToWav(pcmData, 1, 24000);
 }
 
-// --- Prompt Lab Services ---
-
-export async function generateMagicPrompt(rawText: string): Promise<string> {
-    const apiKey = getApiKey();
-    if (!apiKey) throw new Error("API Key tidak ditemukan.");
-    const ai = new GoogleGenAI({ apiKey });
-    
-    const systemInstruction = `
-        Anda adalah Prompt Engineer ahli untuk Midjourney, Stable Diffusion, dan Flux.
-        Tugas Anda adalah mengubah ide sederhana menjadi prompt profesional berkualitas tinggi.
-        
-        ATURAN:
-        1. Tambahkan detail pencahayaan (cinematic lighting, golden hour, volumetric).
-        2. Tambahkan detail kamera (8k, high resolution, photorealistic, 35mm lens).
-        3. Tambahkan gaya artistik yang relevan.
-        4. OUTPUT HANYA TEKS PROMPT FINAL (Bahasa Inggris). Jangan ada pengantar.
-    `;
-
+export async function translateScript(script: string, targetLang: string, style: string): Promise<string> {
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: `Expand this concept into a killer image generation prompt: "${rawText}"`,
-        config: { systemInstruction }
+        contents: `Translate and adapt the following script to ${targetLang} with a ${style} style. Keep it concise for TikTok:\n\n"${script}"`
     });
-    
-    return (response.text || "").trim();
+    return response.text?.trim() || script;
+}
+
+// --- Prompt Lab Functions ---
+
+export async function generateMagicPrompt(input: string): Promise<string> {
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `You are a Prompt Engineer. Expand this short idea into a detailed, high-quality image generation prompt (Midjourney/Flux style). 
+        Include: Subject details, Lighting, Camera Angle, Art Style, and Render quality (4k, 8k).
+        
+        Input: "${input}"
+        
+        Output (Prompt Only):`
+    });
+    return response.text?.trim() || "";
+}
+
+export async function generateVideoPrompt(input: string): Promise<string> {
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `You are a Video Director. Convert this idea into a prompt for AI Video Generators (Sora, Veo, Kling).
+        Focus on: Physics, Camera Movement (Pan/Zoom/Truck), Lighting consistency, and Action.
+        
+        Input: "${input}"
+        
+        Output (Prompt Only):`
+    });
+    return response.text?.trim() || "";
 }
 
 export async function analyzeImageToPrompt(file: UploadedFile): Promise<string> {
-    const apiKey = getApiKey();
-    if (!apiKey) throw new Error("API Key tidak ditemukan.");
-    const ai = new GoogleGenAI({ apiKey });
-
-    const systemInstruction = `
-        Anda adalah ahli "Reverse Engineering" AI Art.
-        Tugas Anda adalah melihat sebuah gambar dan menuliskan Text Prompt yang presisi untuk menghasilkan gambar serupa di Midjourney/Stable Diffusion.
-        
-        Fokus pada:
-        1. Subjek utama (deskripsi fisik detail).
-        2. Komposisi & Angle kamera.
-        3. Pencahayaan & Warna.
-        4. Art Style & Vibe.
-        
-        OUTPUT HANYA TEKS PROMPT (Bahasa Inggris).
-    `;
-
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: {
             parts: [
-                { text: "Analyze this image and provide a generation prompt." },
+                { text: "Analyze this image and write a detailed prompt to recreate it using AI. Describe the subject, composition, lighting, style, and camera settings." },
                 { inlineData: { mimeType: file.type, data: file.data } }
             ]
-        },
-        config: { systemInstruction }
+        }
     });
-
-    return (response.text || "").trim();
-}
-
-export async function generateVideoPrompt(rawText: string): Promise<string> {
-    const apiKey = getApiKey();
-    if (!apiKey) throw new Error("API Key tidak ditemukan.");
-    const ai = new GoogleGenAI({ apiKey });
-
-    const systemInstruction = `
-        Anda adalah Director of Photography (DoP) dan AI Video Expert untuk model seperti Google Veo, Sora, dan Kling.
-        Tugas Anda: Mengubah ide video kasar menjadi PROMPT VIDEO TEKNIS yang sangat detail.
-
-        STRUKTUR PROMPT (Wajib dalam Bahasa Inggris):
-        [Subject Description] + [Action/Movement] + [Camera Movement] + [Lighting/Atmosphere] + [Technical Specs]
-
-        ATURAN KHUSUS:
-        1. CAMERA: Jelaskan gerakan kamera spesifik (e.g., "Slow smooth dolly in", "Truck left", "Low angle tracking shot", "Drone FPV").
-        2. PHYSICS: Jelaskan bagaimana objek bergerak (e.g., "hair blowing in wind", "water splashing", "fabric flowing").
-        3. CONSISTENCY: Pastikan deskripsi visual konsisten.
-        4. OUTPUT: HANYA Teks Prompt Final.
-    `;
-
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: `Create a high-fidelity video generation prompt for: "${rawText}"`,
-        config: { systemInstruction }
-    });
-
-    return (response.text || "").trim();
+    return response.text?.trim() || "";
 }

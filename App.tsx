@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { CONTENT_STYLES, MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, MAX_MULTIPLE_FILES, TTS_VOICES, SCRIPT_STYLES, LANGUAGES, ORIENTATIONS, APP_VERSION } from './constants';
 import { ContentStyle, GeneratedContentState, ToastMessage, UploadedFile, UploadedFilesState, GeneratedImage, ScriptStyle, AppView, UserProfile, HistoryItem } from './types';
@@ -46,8 +47,8 @@ const MenuIcon = () => (
     <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
 );
 
-const DashboardIcon = () => (
-    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+const DashboardIcon = ({ className }: { className?: string }) => (
+    <svg className={`w-5 h-5 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
 );
 
 const MagicIcon = () => (
@@ -74,8 +75,8 @@ const PdfIcon = () => (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
 );
 
-const VideoIcon = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+const VideoIcon = ({ className }: { className?: string }) => (
+    <svg className={`w-4 h-4 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
 );
 
 const GoogleIcon = () => (
@@ -102,7 +103,7 @@ const EyeOffIcon = () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
 );
 
-// New Icons for Prompt Lab Submenus
+// New Icons
 const SparklesIcon = () => (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
 );
@@ -114,8 +115,6 @@ const ScanIcon = () => (
 const FilmIcon = () => (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" /></svg>
 );
-
-// --- New Content Strategy Icons ---
 
 const PresentationIcon = () => (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
@@ -129,8 +128,8 @@ const WalkIcon = () => (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.5 10.5L21 3m-5 0h5v5m0 6l-2.707-2.707a1 1 0 00-1.414 0L12 16.5l-2.5 5m-2.5-5L3 12.5m10-2l-2-2m2 2l2-2m-2 2l-2-2" /></svg>
 );
 
-const CameraIcon = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+const CameraIcon = ({ className }: { className?: string }) => (
+    <svg className={`w-4 h-4 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
 );
 
 const GlobeIcon = () => (
@@ -302,17 +301,20 @@ export default function App() {
     // --- State ---
     const [currentView, setCurrentView] = useState<AppView>('dashboard');
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [isStrategyMenuOpen, setIsStrategyMenuOpen] = useState(true);
+    
+    // Menu States (New Structure)
+    const [isVideoMenuOpen, setIsVideoMenuOpen] = useState(true);
+    const [isPosterMenuOpen, setIsPosterMenuOpen] = useState(true);
     const [isPromptLabMenuOpen, setIsPromptLabMenuOpen] = useState(true);
     
     // License State
     const [isLicensed, setIsLicensed] = useState(false);
     const [licenseInput, setLicenseInput] = useState('');
+    const [onboardingName, setOnboardingName] = useState(''); // New State for Name
     const [showAdminGenerator, setShowAdminGenerator] = useState(false);
     const [generatedKey, setGeneratedKey] = useState('');
-    const [showLicenseKey, setShowLicenseKey] = useState(false); // To toggle visibility in settings
+    const [showLicenseKey, setShowLicenseKey] = useState(false); 
     
-    // Reference for license input
     const licenseInputRef = useRef<HTMLInputElement>(null);
 
     // User Profile State
@@ -361,6 +363,10 @@ export default function App() {
     const [promptImage, setPromptImage] = useState<UploadedFile | null>(null);
     const [isPromptLoading, setIsPromptLoading] = useState(false);
 
+    // Filter styles for sidebar grouping
+    const videoStyles = useMemo(() => CONTENT_STYLES.filter(s => s.category === 'video'), []);
+    const photoStyles = useMemo(() => CONTENT_STYLES.filter(s => s.category === 'photo'), []);
+
     // --- Effects ---
     
     // Check License Logic
@@ -407,7 +413,6 @@ export default function App() {
         }
     }, []);
 
-    // Check for WordPress User
     useEffect(() => {
         if (typeof window !== 'undefined' && window.wp_user) {
             setUserProfile(prev => ({
@@ -417,20 +422,17 @@ export default function App() {
         }
     }, []);
 
-    // Save User Profile to Local Storage when it changes
     useEffect(() => {
         localStorage.setItem('engageProProfile', JSON.stringify(userProfile));
         if (userProfile.apiKey) GeminiService.setLocalApiKey(userProfile.apiKey);
     }, [userProfile]);
 
-    // Save History to Local Storage when it changes
     useEffect(() => {
         try {
             localStorage.setItem('engageProHistory', JSON.stringify(history));
         } catch (e) {
             console.error("Local Storage Quota Exceeded", e);
             showToast("Penyimpanan lokal penuh. Riwayat lama mungkin terhapus.", 'warning');
-            // Logic to pop oldest item could go here if critical
         }
     }, [history]);
 
@@ -448,19 +450,26 @@ export default function App() {
         }, 5000);
     }, []);
 
-    // License Handlers
     const handleLicenseSubmit = async () => {
+        if (!onboardingName.trim()) {
+            showToast("Silakan masukkan nama Anda terlebih dahulu.", 'warning');
+            return;
+        }
+
         setIsLoading(true);
         setLoadingMessage("Memverifikasi...");
-        
-        // Simulate network delay for premium feel
         await new Promise(resolve => setTimeout(resolve, 800));
 
         if (validateLicenseKey(licenseInput.trim().toUpperCase())) {
             setIsLicensed(true);
-            // ENCRYPT: Save as Base64 to obfuscate
+            
+            // Save Name & License
+            const newProfile = { ...userProfile, name: onboardingName.trim() };
+            setUserProfile(newProfile);
+            localStorage.setItem('engageProProfile', JSON.stringify(newProfile));
+            
             localStorage.setItem('engageProLicense', window.btoa(licenseInput.trim().toUpperCase()));
-            showToast("Lisensi Valid! Selamat Datang.", 'success');
+            showToast(`Halo ${onboardingName.trim()}! Selamat Datang.`, 'success');
         } else {
             showToast("Kode Lisensi Tidak Valid.", 'error');
         }
@@ -480,7 +489,6 @@ export default function App() {
         } catch (err) {
             console.warn('Clipboard read permission denied, fallback to manual focus', err);
             showToast("Akses clipboard diblokir browser. Silakan paste manual (Ctrl+V).", 'info');
-            // Fallback: Focus the input so they can type/paste
             licenseInputRef.current?.focus();
         }
     };
@@ -490,7 +498,7 @@ export default function App() {
             localStorage.removeItem('engageProLicense');
             setIsLicensed(false);
             setLicenseInput('');
-            setCurrentView('dashboard'); // Reset view state
+            setCurrentView('dashboard'); 
             showToast("Lisensi berhasil dihapus.", 'info');
         }
     };
@@ -500,7 +508,6 @@ export default function App() {
         setCurrentView('dashboard');
         setGeneratedContent(null);
         setUploadedFiles({ product: null, model: null, background: null, fashionItems: [], locations: [] });
-        // Close sidebar on mobile after selection
         if (window.innerWidth < 1024) setSidebarOpen(false);
     }, []);
 
@@ -599,7 +606,6 @@ export default function App() {
     // --- History Handlers ---
 
     const saveToHistory = (content: GeneratedContentState, style: ContentStyle, desc: string) => {
-        // IMPORTANT: Set audioBlob to null before saving to avoid LocalStorage quota issues
         const contentToSave: GeneratedContentState = {
             ...content,
             audioBlob: null
@@ -662,11 +668,9 @@ export default function App() {
         
         try {
             setLoadingMessage("Menganalisis & merancang rencana kreatif...");
-            // Pass userProfile to the service
             const plan = await GeminiService.getCreativePlan(selectedStyle, uploadedFiles, currentDescription, language, scriptStyle, orientation, userProfile);
             
             const promptsToGenerate = plan.shotPrompts;
-            
             const images: GeneratedImage[] = [];
             const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -689,7 +693,6 @@ export default function App() {
                     } catch (e) {
                          images.push({ success: false, base64: null, prompt: promptsToGenerate[0], error: "Generation failed" });
                     }
-
                     if (i < uploadedFiles.fashionItems.length - 1) await delay(3000); 
                 }
 
@@ -726,8 +729,7 @@ export default function App() {
                 }
             }
 
-            const successfulImages = images.filter(img => img.success);
-            if (successfulImages.length === 0) {
+            if (images.filter(img => img.success).length === 0) {
                  const firstError = failure?.error || "Unknown Error";
                 throw new Error(`Gagal membuat semua gambar. Detail: ${firstError}`);
             }
@@ -755,7 +757,6 @@ export default function App() {
 
             setGeneratedContent(finalContent);
             
-            // Save to history automatically
             try {
                 saveToHistory(finalContent, selectedStyle, currentDescription || "Project Baru");
             } catch (histError) {
@@ -763,9 +764,6 @@ export default function App() {
             }
 
             showToast("Konten berhasil dibuat & disimpan!", 'success');
-            if (images.some(img => !img.success)) {
-                showToast("Beberapa gambar gagal dibuat.", 'warning');
-            }
 
         } catch (error: any) {
             console.error("Kesalahan pada proses generasi:", error);
@@ -779,7 +777,7 @@ export default function App() {
             setIsLoading(false);
             setLoadingMessage('');
         }
-    }, [selectedStyle, uploadedFiles, description, travelDescription, language, scriptStyle, orientation, showToast, isApiKeyAvailable, userProfile]); // Added userProfile to dependencies
+    }, [selectedStyle, uploadedFiles, description, travelDescription, language, scriptStyle, orientation, showToast, isApiKeyAvailable, userProfile]); 
     
     const handleTranslate = async () => {
         if (!script) return;
@@ -860,7 +858,6 @@ export default function App() {
             const { jsPDF } = jspdf;
             const doc = new jsPDF();
             
-            // --- Page 1: Overview ---
             doc.setFontSize(22);
             doc.setTextColor(33, 33, 33);
             doc.text("EngagePro AI - Storyboard", 20, 20);
@@ -868,12 +865,10 @@ export default function App() {
             doc.setFontSize(12);
             doc.setTextColor(100);
             doc.text(`Project: ${selectedStyle ? CONTENT_STYLES.find(s=>s.id === selectedStyle)?.name : 'Untitled'}`, 20, 30);
-            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 36);
             
-            // TikTok Script
             doc.setFontSize(16);
             doc.setTextColor(0);
-            doc.text("Naskah Video / TikTok Script", 20, 50);
+            doc.text("Naskah / Tagline", 20, 50);
             
             doc.setFontSize(11);
             doc.setTextColor(50);
@@ -882,7 +877,6 @@ export default function App() {
             
             let yPos = 60 + (splitScript.length * 5) + 20;
 
-            // Metadata
             if (generatedContent.tiktokMetadata) {
                 doc.setFontSize(12);
                 doc.setTextColor(0);
@@ -891,55 +885,43 @@ export default function App() {
                 
                 doc.setFontSize(10);
                 doc.setTextColor(80);
-                doc.text(`Title/Description: ${generatedContent.tiktokMetadata.description}`, 20, yPos);
+                doc.text(`Title: ${generatedContent.tiktokMetadata.description}`, 20, yPos);
                 yPos += 10;
                 doc.text(`Keywords: ${generatedContent.tiktokMetadata.keywords.join(", ")}`, 20, yPos);
                 yPos += 15;
             }
 
-            // --- Shots (Visuals) ---
             doc.addPage();
             let pageY = 20;
             
             doc.setFontSize(18);
             doc.setTextColor(0);
-            doc.text("Visual Storyboard", 20, pageY);
+            doc.text("Visual Assets", 20, pageY);
             pageY += 15;
 
             for (let i = 0; i < generatedContent.generatedImages.length; i++) {
                 const img = generatedContent.generatedImages[i];
                 if (img.success && img.base64) {
-                    
                     if (pageY > 200) {
                         doc.addPage();
                         pageY = 20;
                     }
-
-                    // Add Image
-                    // Aspect ratio calculation simplified for PDF placement
-                    doc.addImage(`data:image/png;base64,${img.base64}`, 'PNG', 20, pageY, 60, 60); // Square preview box
-                    
-                    // Add Text Info Next to Image
+                    doc.addImage(`data:image/png;base64,${img.base64}`, 'PNG', 20, pageY, 60, 60);
                     doc.setFontSize(12);
                     doc.setTextColor(0);
                     doc.text(`Shot ${i+1}`, 90, pageY + 5);
-                    
                     doc.setFontSize(9);
                     doc.setTextColor(80);
                     const animText = generatedContent.animationPrompts[i] ? `Animation: ${generatedContent.animationPrompts[i]}` : "No animation prompt.";
                     const splitAnim = doc.splitTextToSize(animText, 100);
                     doc.text(splitAnim, 90, pageY + 15);
-
-                    pageY += 70; // Space for next item
+                    pageY += 70;
                 }
             }
-
             doc.save("EngagePro_Storyboard.pdf");
             showToast("PDF berhasil diunduh!", 'success');
-
         } catch (error: any) {
-            console.error(error);
-            showToast(`Gagal membuat PDF: ${error.message}. Pastikan koneksi internet stabil untuk library.`, 'error');
+            showToast(`Gagal membuat PDF: ${error.message}.`, 'error');
         }
     };
 
@@ -1016,8 +998,16 @@ export default function App() {
     // --- Derived State for Logic ---
     const scriptlessStyles: ContentStyle[] = useMemo(() => ['fashion_broll', 'treadmill_fashion_show', 'aesthetic_hands_on'], []);
     const showScriptSection = selectedStyle && !scriptlessStyles.includes(selectedStyle);
+    
     const mainAssetConfig = useMemo(() => {
         if (!selectedStyle) return null;
+        
+        // POSTER LOGIC (New v2.5)
+        if (selectedStyle.startsWith('poster_')) {
+             return { id: 'product', label: 'Foto Produk/Objek Utama (Wajib, 1)', multiple: false, maxFiles: 1, files: uploadedFiles.product };
+        }
+
+        // VIDEO LOGIC
         switch (selectedStyle) {
             case 'direct':
             case 'quick_review':
@@ -1036,7 +1026,11 @@ export default function App() {
         }
     }, [selectedStyle, uploadedFiles]);
 
-    const stylesRequiringDescription: (ContentStyle | null)[] = useMemo(() => ['direct', 'quick_review', 'food_promo'], []);
+    const stylesRequiringDescription: (ContentStyle | null)[] = useMemo(() => [
+        'direct', 'quick_review', 'food_promo', 
+        'poster_food', 'poster_beauty', 'poster_tech', 'poster_property'
+    ], []);
+    
     const stylesRequiringTravelDesc: (ContentStyle | null)[] = useMemo(() => ['travel', 'property'], []);
     const currentStyleName = selectedStyle ? CONTENT_STYLES.find(s => s.id === selectedStyle)?.name : '';
     const currentStyleDesc = selectedStyle ? CONTENT_STYLES.find(s => s.id === selectedStyle)?.description : '';
@@ -1053,75 +1047,43 @@ export default function App() {
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">EngagePro AI Studio</h2>
                     <p className="text-gray-500 text-sm mb-6">Masukkan kode lisensi produk Anda untuk melanjutkan.</p>
-                    
                     <div className="space-y-4">
-                        <div className="flex gap-2">
-                             <input 
-                                ref={licenseInputRef}
+                        <div className="text-left">
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1 tracking-wider ml-1">Nama Panggilan</label>
+                            <input 
                                 type="text" 
-                                value={licenseInput}
-                                onChange={(e) => setLicenseInput(e.target.value)}
-                                placeholder="PRO-XXXX-XXXX"
-                                className="w-full text-center tracking-widest px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase font-mono"
+                                value={onboardingName} 
+                                onChange={(e) => setOnboardingName(e.target.value)} 
+                                placeholder="Cth: Budi, Admin" 
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" 
                             />
-                            <button 
-                                onClick={handlePasteLicense}
-                                className="bg-gray-100 px-4 rounded-xl hover:bg-gray-200 transition-colors text-gray-600"
-                                title="Paste"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                            </button>
                         </div>
-                        
-                        <button 
-                            onClick={handleLicenseSubmit}
-                            disabled={isLoading}
-                            className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md flex items-center justify-center gap-2"
-                        >
-                            {isLoading ? <SpinnerIcon /> : "Aktivasi Lisensi"}
-                        </button>
+                        <div className="text-left">
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1 tracking-wider ml-1">Kode Lisensi</label>
+                            <div className="flex gap-2">
+                                <input ref={licenseInputRef} type="text" value={licenseInput} onChange={(e) => setLicenseInput(e.target.value)} placeholder="PRO-XXXX-XXXX" className="w-full text-center tracking-widest px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase font-mono" />
+                                <button onClick={handlePasteLicense} className="bg-gray-100 px-4 rounded-xl hover:bg-gray-200 transition-colors text-gray-600" title="Paste"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg></button>
+                            </div>
+                        </div>
+                        <button onClick={handleLicenseSubmit} disabled={isLoading} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md flex items-center justify-center gap-2">{isLoading ? <SpinnerIcon /> : "Aktivasi Lisensi"}</button>
                     </div>
-
                     <div className="mt-6 border-t border-gray-100 pt-6">
                         <p className="text-sm text-gray-600 mb-3">Belum punya lisensi?</p>
-                        <a 
-                            href="https://www.pondokgue.digital/engagepro-studio-ai/" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="block w-full bg-green-50 text-green-700 font-bold py-2.5 rounded-xl border border-green-200 hover:bg-green-100 transition-colors text-sm mb-3 flex items-center justify-center gap-2"
-                        >
-                            Beli Lisensi Disini <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                        </a>
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-800 leading-relaxed">
-                            🎁 <strong>Promo Spesial:</strong> Gunakan kode kupon <code className="bg-yellow-100 px-1.5 py-0.5 rounded border border-yellow-200 font-mono font-bold text-yellow-900 mx-1">earlyengage</code> untuk diskon <span className="font-bold text-red-600">Rp 150.000</span>.
-                        </div>
-                    </div>
-
-                    <div className="mt-8 text-xs text-gray-400 select-none">
-                        Version {APP_VERSION}
+                        <a href="https://www.pondokgue.digital/engagepro-studio-ai/" target="_blank" rel="noopener noreferrer" className="block w-full bg-green-50 text-green-700 font-bold py-2.5 rounded-xl border border-green-200 hover:bg-green-100 transition-colors text-sm mb-3 flex items-center justify-center gap-2">Beli Lisensi Disini <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
                     </div>
                 </div>
-
-                {/* Secret Admin Generator Modal */}
+                {/* Admin Modal */}
                 {showAdminGenerator && (
                     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-lg p-6 w-full max-w-sm">
                             <h3 className="font-bold text-gray-900 mb-4">Admin License Generator</h3>
-                            <div className="bg-gray-100 p-4 rounded text-center font-mono text-lg font-bold mb-4 tracking-widest select-all">
-                                {generatedKey || "Click Generate"}
-                            </div>
-                            <div className="flex gap-2">
-                                <button onClick={handleGenerateKey} className="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700">Generate New Key</button>
-                                {generatedKey && (
-                                    <button onClick={() => navigator.clipboard.writeText(generatedKey)} className="bg-gray-200 text-gray-700 px-4 rounded hover:bg-gray-300">Copy</button>
-                                )}
-                            </div>
-                            <button onClick={() => setShowAdminGenerator(false)} className="mt-4 text-xs text-gray-500 hover:text-gray-800 w-full text-center">Close Admin</button>
+                            <div className="bg-gray-100 p-4 rounded text-center font-mono text-lg font-bold mb-4 tracking-widest select-all">{generatedKey || "Click Generate"}</div>
+                            <div className="flex gap-2"><button onClick={handleGenerateKey} className="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700">Generate</button></div>
+                            <button onClick={() => setShowAdminGenerator(false)} className="mt-4 text-xs text-gray-500 w-full text-center">Close</button>
                         </div>
                     </div>
                 )}
-                
-                {/* Toast Container for Gate */}
+                {/* Toasts */}
                 <div className="fixed bottom-6 right-6 z-50 space-y-2 w-full max-w-sm pointer-events-none">
                     {toasts.map(toast => (
                         <div key={toast.id} className={`pointer-events-auto bg-white border-l-4 ${toast.type === 'error' ? 'border-red-500' : toast.type === 'success' ? 'border-green-500' : 'border-blue-500'} shadow-lg rounded-r-lg p-4 flex items-center animate-toastIn`}>
@@ -1136,56 +1098,47 @@ export default function App() {
     const renderSidebar = () => (
         <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#111827] text-gray-100 transition-transform duration-300 transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <div className="flex flex-col h-full">
-                {/* Header - Click to Reset/Home */}
-                <div 
-                    onClick={() => {
-                        setSelectedStyle(null);
-                        setCurrentView('dashboard');
-                        if (window.innerWidth < 1024) setSidebarOpen(false);
-                    }}
-                    className="flex items-center justify-between p-6 border-b border-gray-800 cursor-pointer hover:bg-gray-800/50 transition-colors"
-                    title="Kembali ke Beranda"
-                >
+                <div onClick={() => { setSelectedStyle(null); setCurrentView('dashboard'); if (window.innerWidth < 1024) setSidebarOpen(false); }} className="flex items-center justify-between p-6 border-b border-gray-800 cursor-pointer hover:bg-gray-800/50 transition-colors">
                     <div className="flex items-center gap-2">
                          <div className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white p-1.5 rounded-lg shadow-lg">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
                         </div>
-                        <div>
-                             <h1 className="text-lg font-bold tracking-tight">EngagePro</h1>
-                             <span className="text-[10px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded ml-1">{APP_VERSION}</span>
-                        </div>
+                        <div><h1 className="text-lg font-bold tracking-tight">EngagePro</h1><span className="text-[10px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded ml-1">{APP_VERSION}</span></div>
                     </div>
-                    <button onClick={(e) => { e.stopPropagation(); setSidebarOpen(false); }} className="lg:hidden text-gray-400 hover:text-white">
-                        <CloseIcon />
-                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setSidebarOpen(false); }} className="lg:hidden text-gray-400 hover:text-white"><CloseIcon /></button>
                 </div>
 
-                {/* Navigation */}
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
-                    {/* Content Strategy Accordion */}
-                    <div className="space-y-1">
-                        <button
-                            onClick={() => setIsStrategyMenuOpen(!isStrategyMenuOpen)}
-                            className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all ${currentView === 'dashboard' ? 'text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                        >
-                            <div className="flex items-center">
-                                <DashboardIcon />
-                                <span className="font-medium">Strategi Konten</span>
-                            </div>
-                            <ChevronDownIcon className={`transform transition-transform ${isStrategyMenuOpen ? 'rotate-180' : ''}`} />
+                    
+                    {/* 1. VIDEO STUDIO */}
+                    <div className="space-y-1 mb-2">
+                        <button onClick={() => setIsVideoMenuOpen(!isVideoMenuOpen)} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all ${currentView === 'dashboard' && selectedStyle && !selectedStyle.startsWith('poster_') ? 'text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+                            <div className="flex items-center"><VideoIcon className="mr-3" /><span className="font-medium">Video Studio</span></div>
+                            <ChevronDownIcon className={`transform transition-transform ${isVideoMenuOpen ? 'rotate-180' : ''}`} />
                         </button>
-                        
-                        {isStrategyMenuOpen && (
+                        {isVideoMenuOpen && (
                             <div className="pl-6 space-y-1 animate-toastIn">
-                                {CONTENT_STYLES.map((style) => (
-                                    <button
-                                        key={style.id}
-                                        onClick={() => handleStyleSelect(style.id)}
-                                        className={`flex items-center w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${selectedStyle === style.id && currentView === 'dashboard' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}
-                                    >
-                                        <span className="opacity-70 group-hover:opacity-100 mr-2">
-                                            {getStyleIcon(style.id)}
-                                        </span>
+                                {videoStyles.map((style) => (
+                                    <button key={style.id} onClick={() => handleStyleSelect(style.id)} className={`flex items-center w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${selectedStyle === style.id && currentView === 'dashboard' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}>
+                                        <span className="opacity-70 group-hover:opacity-100 mr-2">{getStyleIcon(style.id)}</span>
+                                        {style.name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 2. POSTER MAKER (NEW) */}
+                    <div className="space-y-1 mb-2">
+                        <button onClick={() => setIsPosterMenuOpen(!isPosterMenuOpen)} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all ${currentView === 'dashboard' && selectedStyle && selectedStyle.startsWith('poster_') ? 'text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+                            <div className="flex items-center"><CameraIcon className="mr-3" /><span className="font-medium">Poster Maker</span></div>
+                            <ChevronDownIcon className={`transform transition-transform ${isPosterMenuOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {isPosterMenuOpen && (
+                            <div className="pl-6 space-y-1 animate-toastIn">
+                                {photoStyles.map((style) => (
+                                    <button key={style.id} onClick={() => handleStyleSelect(style.id)} className={`flex items-center w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${selectedStyle === style.id && currentView === 'dashboard' ? 'bg-purple-600/20 text-purple-300 border-l-2 border-purple-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}>
+                                        <span className="opacity-70 group-hover:opacity-100 mr-2"><CameraIcon className="w-3 h-3"/></span>
                                         {style.name}
                                     </button>
                                 ))}
@@ -1194,79 +1147,29 @@ export default function App() {
                     </div>
 
                     <div className="pt-4 mt-4 border-t border-gray-800">
-                         {/* Prompt Lab Accordion */}
+                         {/* 3. PROMPT LAB */}
                          <div className="space-y-1 mb-2">
-                            <button
-                                onClick={() => setIsPromptLabMenuOpen(!isPromptLabMenuOpen)}
-                                className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all ${currentView === 'prompt_lab' ? 'text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                            >
-                                <div className="flex items-center">
-                                    <MagicIcon />
-                                    <span className="font-medium">Prompt Lab</span>
-                                </div>
+                            <button onClick={() => setIsPromptLabMenuOpen(!isPromptLabMenuOpen)} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all ${currentView === 'prompt_lab' ? 'text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+                                <div className="flex items-center"><MagicIcon /><span className="font-medium">Prompt Lab</span></div>
                                 <ChevronDownIcon className={`transform transition-transform ${isPromptLabMenuOpen ? 'rotate-180' : ''}`} />
                             </button>
-                            
                             {isPromptLabMenuOpen && (
                                 <div className="pl-11 space-y-1 animate-toastIn">
-                                    <button
-                                        onClick={() => handlePromptLabSelect('expander')}
-                                        className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${promptLabMode === 'expander' && currentView === 'prompt_lab' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}
-                                    >
-                                        <SparklesIcon /> Expander
-                                    </button>
-                                    <button
-                                        onClick={() => handlePromptLabSelect('scanner')}
-                                        className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${promptLabMode === 'scanner' && currentView === 'prompt_lab' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}
-                                    >
-                                        <ScanIcon /> Scanner
-                                    </button>
-                                    <button
-                                        onClick={() => handlePromptLabSelect('video')}
-                                        className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${promptLabMode === 'video' && currentView === 'prompt_lab' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}
-                                    >
-                                        <FilmIcon /> Video
-                                    </button>
+                                    <button onClick={() => handlePromptLabSelect('expander')} className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${promptLabMode === 'expander' && currentView === 'prompt_lab' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}><SparklesIcon /> Expander</button>
+                                    <button onClick={() => handlePromptLabSelect('scanner')} className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${promptLabMode === 'scanner' && currentView === 'prompt_lab' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}><ScanIcon /> Scanner</button>
+                                    <button onClick={() => handlePromptLabSelect('video')} className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${promptLabMode === 'video' && currentView === 'prompt_lab' ? 'bg-indigo-600/20 text-indigo-300 border-l-2 border-indigo-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}><FilmIcon /> Video</button>
                                 </div>
                             )}
                         </div>
-
-                        {/* History Menu */}
-                        <button
-                            onClick={() => { setCurrentView('history'); setSidebarOpen(false); }}
-                            className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                        >
-                            <HistoryIcon />
-                            <span className="font-medium">Riwayat</span>
-                        </button>
-
-                        <button
-                            onClick={() => { setCurrentView('settings'); setSidebarOpen(false); }}
-                            className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'settings' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                        >
-                            <SettingsIcon />
-                            <span className="font-medium">Pengaturan</span>
-                        </button>
-                        <button
-                            onClick={() => { setCurrentView('help'); setSidebarOpen(false); }}
-                            className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'help' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                        >
-                            <HelpIcon />
-                            <span className="font-medium">Bantuan</span>
-                        </button>
+                        <button onClick={() => { setCurrentView('history'); setSidebarOpen(false); }} className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}><HistoryIcon /><span className="font-medium">Riwayat</span></button>
+                        <button onClick={() => { setCurrentView('settings'); setSidebarOpen(false); }} className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'settings' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}><SettingsIcon /><span className="font-medium">Pengaturan</span></button>
+                        <button onClick={() => { setCurrentView('help'); setSidebarOpen(false); }} className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${currentView === 'help' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}><HelpIcon /><span className="font-medium">Bantuan</span></button>
                     </div>
                 </nav>
-
-                {/* User Profile Footer */}
                 <div className="p-4 border-t border-gray-800 bg-[#0d121f]">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
-                            {userProfile.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                            <p className="text-sm font-semibold text-white">{userProfile.name}</p>
-                            <p className="text-xs text-indigo-400">Creator</p>
-                        </div>
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">{userProfile.name.charAt(0).toUpperCase()}</div>
+                        <div><p className="text-sm font-semibold text-white">{userProfile.name}</p><p className="text-xs text-indigo-400">Creator</p></div>
                     </div>
                 </div>
             </div>
@@ -1275,47 +1178,23 @@ export default function App() {
 
     const renderHistory = () => (
         <div className="animate-toastIn h-full">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <HistoryIcon /> Riwayat Generasi
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"><HistoryIcon /> Riwayat Generasi</h2>
             {history.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-[50vh] bg-white rounded-2xl border border-dashed border-gray-300">
-                    <HistoryIcon />
-                    <p className="mt-4 text-gray-500">Belum ada riwayat tersimpan.</p>
-                </div>
+                <div className="flex flex-col items-center justify-center h-[50vh] bg-white rounded-2xl border border-dashed border-gray-300"><HistoryIcon /><p className="mt-4 text-gray-500">Belum ada riwayat tersimpan.</p></div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {history.map((item) => (
                         <div key={item.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
                             <div className="h-40 bg-gray-100 relative">
-                                {item.thumbnail ? (
-                                    <img src={`data:image/png;base64,${item.thumbnail}`} alt="Thumbnail" className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
-                                )}
-                                <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded">
-                                    {new Date(item.timestamp).toLocaleDateString()}
-                                </div>
+                                {item.thumbnail ? <img src={`data:image/png;base64,${item.thumbnail}`} alt="Thumbnail" className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-gray-400">No Image</div>}
+                                <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded">{new Date(item.timestamp).toLocaleDateString()}</div>
                             </div>
                             <div className="p-4 flex-1 flex flex-col">
                                 <h3 className="font-bold text-gray-900 truncate mb-1">{item.description}</h3>
-                                <p className="text-xs text-indigo-600 bg-indigo-50 w-fit px-2 py-0.5 rounded mb-4">
-                                    {CONTENT_STYLES.find(s => s.id === item.style)?.name || item.style}
-                                </p>
+                                <p className="text-xs text-indigo-600 bg-indigo-50 w-fit px-2 py-0.5 rounded mb-4">{CONTENT_STYLES.find(s => s.id === item.style)?.name || item.style}</p>
                                 <div className="mt-auto flex gap-2">
-                                    <button 
-                                        onClick={() => loadHistoryItem(item)}
-                                        className="flex-1 bg-indigo-600 text-white text-xs font-medium py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-                                    >
-                                        Buka (Load)
-                                    </button>
-                                    <button 
-                                        onClick={() => deleteHistoryItem(item.id)}
-                                        className="bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100 transition-colors"
-                                        title="Hapus"
-                                    >
-                                        <TrashIcon />
-                                    </button>
+                                    <button onClick={() => loadHistoryItem(item)} className="flex-1 bg-indigo-600 text-white text-xs font-medium py-2 rounded-lg hover:bg-indigo-700 transition-colors">Buka (Load)</button>
+                                    <button onClick={() => deleteHistoryItem(item.id)} className="bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100 transition-colors"><TrashIcon /></button>
                                 </div>
                             </div>
                         </div>
@@ -1327,90 +1206,34 @@ export default function App() {
 
     const renderPromptLab = () => (
         <div className="max-w-4xl mx-auto animate-toastIn h-full flex flex-col">
-            {/* Content Area */}
             <div className="grid lg:grid-cols-2 gap-8 flex-1">
-                {/* Input Section */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 h-fit">
                     {promptLabMode === 'expander' ? (
                         <>
                             <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2"><SparklesIcon /> Ide Sederhana</h3>
                             <p className="text-xs text-gray-500 mb-4">Masukkan ide singkat, AI akan mengubahnya menjadi prompt detail.</p>
-                            <textarea 
-                                value={promptInput}
-                                onChange={(e) => setPromptInput(e.target.value)}
-                                placeholder='Contoh: "Sepatu lari warna merah di jalan aspal saat hujan"'
-                                className="w-full h-40 bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-4"
-                            ></textarea>
-                            <button 
-                                onClick={handleMagicPrompt}
-                                disabled={isPromptLoading}
-                                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
-                            >
-                                {isPromptLoading ? <SpinnerIcon /> : <><MagicIcon /> Expand Magic Prompt</>}
-                            </button>
+                            <textarea value={promptInput} onChange={(e) => setPromptInput(e.target.value)} placeholder='Contoh: "Sepatu lari warna merah"' className="w-full h-40 bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-4"></textarea>
+                            <button onClick={handleMagicPrompt} disabled={isPromptLoading} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">{isPromptLoading ? <SpinnerIcon /> : <><MagicIcon /> Expand Magic Prompt</>}</button>
                         </>
                     ) : promptLabMode === 'video' ? (
                         <>
                             <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2"><FilmIcon /> Ide Video</h3>
-                            <p className="text-xs text-gray-500 mb-4">Masukkan konsep video, AI akan membuat prompt teknis (Kamera, Lighting, Fisika).</p>
-                            <textarea 
-                                value={promptInput}
-                                onChange={(e) => setPromptInput(e.target.value)}
-                                placeholder='Contoh: "Kucing berlari di lorong pesawat luar angkasa, sinematik"'
-                                className="w-full h-40 bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-4"
-                            ></textarea>
-                            <button 
-                                onClick={handleVideoPrompt}
-                                disabled={isPromptLoading}
-                                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
-                            >
-                                {isPromptLoading ? <SpinnerIcon /> : <><VideoIcon /> Generate Video Prompt</>}
-                            </button>
+                            <p className="text-xs text-gray-500 mb-4">Masukkan konsep video, AI akan membuat prompt teknis.</p>
+                            <textarea value={promptInput} onChange={(e) => setPromptInput(e.target.value)} placeholder='Contoh: "Kucing berlari di lorong"' className="w-full h-40 bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none mb-4"></textarea>
+                            <button onClick={handleVideoPrompt} disabled={isPromptLoading} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">{isPromptLoading ? <SpinnerIcon /> : <><VideoIcon /> Generate Video Prompt</>}</button>
                         </>
                     ) : (
                         <>
                             <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2"><ScanIcon /> Upload Referensi</h3>
-                            <p className="text-xs text-gray-500 mb-4">Upload gambar viral/keren, AI akan membuatkan prompt untuk menirunya.</p>
-                            <FileInput 
-                                id="promptImage" 
-                                label="Gambar Referensi" 
-                                files={promptImage} 
-                                onFilesChange={(id, files) => setPromptImage(files[0])} 
-                                onFileRemove={() => setPromptImage(null)} 
-                            />
-                            <button 
-                                onClick={handleImageAnalysis}
-                                disabled={isPromptLoading}
-                                className="w-full mt-4 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
-                            >
-                                {isPromptLoading ? <SpinnerIcon /> : <><MagicIcon /> Scan & Generate Prompt</>}
-                            </button>
+                            <p className="text-xs text-gray-500 mb-4">Upload gambar referensi, AI akan membuatkan prompt.</p>
+                            <FileInput id="promptImage" label="Gambar Referensi" files={promptImage} onFilesChange={(id, files) => setPromptImage(files[0])} onFileRemove={() => setPromptImage(null)} />
+                            <button onClick={handleImageAnalysis} disabled={isPromptLoading} className="w-full mt-4 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">{isPromptLoading ? <SpinnerIcon /> : <><MagicIcon /> Scan & Generate Prompt</>}</button>
                         </>
                     )}
                 </div>
-
-                {/* Output Section */}
                 <div className="bg-gray-900 text-gray-100 p-6 rounded-2xl shadow-lg flex flex-col h-full min-h-[300px]">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-indigo-400 uppercase tracking-wider text-sm">Hasil Prompt (English)</h3>
-                        <button 
-                            onClick={handleCopyPrompt}
-                            className="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-xs flex items-center gap-2 transition-colors"
-                        >
-                            <CopyIcon /> Copy
-                        </button>
-                    </div>
-                    
-                    <div className="flex-1 bg-gray-800/50 rounded-xl p-4 border border-gray-700 font-mono text-sm leading-relaxed overflow-y-auto custom-scrollbar">
-                        {promptResult ? (
-                            promptResult
-                        ) : (
-                            <span className="text-gray-500 italic">
-                                {isPromptLoading ? "Sedang memproses..." : "Hasil prompt akan muncul di sini..."}
-                            </span>
-                        )}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-4 text-center">Cocok untuk: {promptLabMode === 'video' ? 'Veo, Sora, Kling, Runway' : 'Midjourney, Stable Diffusion, Flux, Dreamina'}.</p>
+                    <div className="flex justify-between items-center mb-4"><h3 className="font-bold text-indigo-400 uppercase tracking-wider text-sm">Hasil Prompt (English)</h3><button onClick={handleCopyPrompt} className="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-xs flex items-center gap-2 transition-colors"><CopyIcon /> Copy</button></div>
+                    <div className="flex-1 bg-gray-800/50 rounded-xl p-4 border border-gray-700 font-mono text-sm leading-relaxed overflow-y-auto custom-scrollbar">{promptResult ? promptResult : <span className="text-gray-500 italic">{isPromptLoading ? "Sedang memproses..." : "Hasil prompt akan muncul di sini..."}</span>}</div>
                 </div>
             </div>
         </div>
@@ -1419,48 +1242,30 @@ export default function App() {
     const renderDashboard = () => (
         <div className="animate-toastIn h-full">
             {!selectedStyle ? (
-                // Welcome / Empty State
                 <div className="h-full flex flex-col items-center justify-center p-8 text-center min-h-[60vh]">
-                    <div className="bg-white p-8 rounded-full shadow-lg mb-6 ring-4 ring-indigo-50">
-                        <svg className="w-16 h-16 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
-                    </div>
+                    <div className="bg-white p-8 rounded-full shadow-lg mb-6 ring-4 ring-indigo-50"><svg className="w-16 h-16 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg></div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Selamat Datang di EngagePro Studio</h2>
                     <p className="text-gray-500 max-w-md mx-auto mb-8">Pilih strategi konten dari menu di sebelah kiri untuk mulai membuat aset marketing viral Anda.</p>
                     <div className="flex flex-col items-center gap-4">
                         <button onClick={() => setSidebarOpen(true)} className="lg:hidden bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg w-full max-w-xs">Buka Menu</button>
-                        <button 
-                            onClick={() => setCurrentView('help')}
-                            className="text-indigo-600 font-medium hover:text-indigo-800 text-sm flex items-center gap-1 transition-colors"
-                        >
-                            <HelpIcon />
-                            Butuh Bantuan? Pelajari Cara Pakai
-                        </button>
                     </div>
                 </div>
             ) : (
-                // Workspace Layout
                 <div className="lg:grid lg:grid-cols-3 lg:gap-8 h-full">
-                    {/* Left Column: Config */}
                     <div className="lg:col-span-1 space-y-6">
                         <section>
                             <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
                                 <div className="flex items-start justify-between mb-4 pb-4 border-b border-gray-100">
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-800">{currentStyleName}</h3>
-                                        <p className="text-xs text-gray-500 mt-1">{currentStyleDesc}</p>
-                                    </div>
+                                    <div><h3 className="text-lg font-bold text-gray-800">{currentStyleName}</h3><p className="text-xs text-gray-500 mt-1">{currentStyleDesc}</p></div>
                                     <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded font-bold shrink-0 ml-2">Langkah 1</span>
                                 </div>
-                                
                                 <div className="space-y-4">
-                                    {/* Upload Assets */}
                                     {mainAssetConfig && <FileInput {...mainAssetConfig} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
-                                    {selectedStyle && !['aesthetic_hands_on'].includes(selectedStyle) && <FileInput id="model" label="Foto Model (Opsional)" files={uploadedFiles.model} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
+                                    
+                                    {selectedStyle && !['aesthetic_hands_on'].includes(selectedStyle) && !selectedStyle.startsWith('poster_') && <FileInput id="model" label="Foto Model (Opsional)" files={uploadedFiles.model} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
+                                    
                                     {selectedStyle && ['fashion_broll', 'treadmill_fashion_show', 'aesthetic_hands_on', 'food_promo'].includes(selectedStyle) && <FileInput id="background" label="Foto Latar (Opsional)" files={uploadedFiles.background} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
-                                
                                     <hr className="border-gray-100 my-4"/>
-
-                                    {/* Configuration */}
                                     <div className="grid grid-cols-1 gap-3">
                                         <div>
                                             <label className="block text-xs font-medium text-gray-500 mb-1">Orientasi</label>
@@ -1468,7 +1273,6 @@ export default function App() {
                                                 {ORIENTATIONS.map(orient => <option key={orient.id} value={orient.id}>{orient.name}</option>)}
                                             </select>
                                         </div>
-                                        {/* Added Language Selector */}
                                         <div>
                                             <label className="block text-xs font-medium text-gray-500 mb-1">Bahasa</label>
                                             <select value={language} onChange={e => setLanguage(e.target.value)} className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
@@ -1477,54 +1281,38 @@ export default function App() {
                                         </div>
                                         {showScriptSection && (
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-500 mb-1">Gaya Naskah</label>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">{selectedStyle.startsWith('poster_') ? 'Gaya Copywriting' : 'Gaya Naskah'}</label>
                                                 <select value={scriptStyle} onChange={e => setScriptStyle(e.target.value as ScriptStyle)} className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
                                                     {SCRIPT_STYLES.map(style => <option key={style.id} value={style.id}>{style.name}</option>)}
                                                 </select>
                                             </div>
                                         )}
                                     </div>
-
-                                    {/* Descriptions */}
                                     <div className="mt-4">
                                         {stylesRequiringDescription.includes(selectedStyle) && <div className="space-y-1"><label className="block text-xs font-medium text-gray-500">Deskripsi Konten</label><textarea rows={3} value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Jelaskan produk anda..."></textarea></div>}
                                         {stylesRequiringTravelDesc.includes(selectedStyle) && <div className="space-y-1"><label className="block text-xs font-medium text-gray-500">Deskripsi Lokasi</label><textarea rows={3} value={travelDescription} onChange={e => setTravelDescription(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Jelaskan lokasi/properti..."></textarea></div>}
                                     </div>
                                 </div>
-
                                 <button onClick={startGenerationProcess} disabled={isLoading} className="mt-6 w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-xl text-md transition-all shadow-md flex items-center justify-center gap-2">
-                                    {isLoading && generatedContent === null ? (
-                                        <><div className='animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full'></div> Proses...</>
-                                    ) : (
-                                        <><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Generate Magic</>
-                                    )}
+                                    {isLoading && generatedContent === null ? (<><div className='animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full'></div> Proses...</>) : (<><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Generate Magic</>)}
                                 </button>
                             </div>
                         </section>
                     </div>
                     
-                    {/* Right Column: Results */}
                     <div className="lg:col-span-2 mt-8 lg:mt-0">
                         {!generatedContent ? (
                             <div className="h-full min-h-[400px] flex items-center justify-center bg-white border border-dashed border-gray-300 rounded-2xl">
-                                <div className="text-center p-8">
-                                    <PlaceholderIcon />
-                                    <p className="mt-4 text-gray-500 text-sm">Hasil kreatif Anda akan muncul di sini.</p>
-                                </div>
+                                <div className="text-center p-8"><PlaceholderIcon /><p className="mt-4 text-gray-500 text-sm">Hasil kreatif Anda akan muncul di sini.</p></div>
                             </div>
                         ) : (
                             <div className="space-y-6">
-                                {/* Visuals */}
                                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="text-sm font-bold uppercase text-gray-700">Visual Storyboard</h3>
                                         <div className="flex gap-2">
-                                            <button onClick={handleDownloadPDF} className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 px-3 py-1 rounded-lg border border-red-100 flex items-center gap-1 transition-colors">
-                                                <PdfIcon /> Export PDF
-                                            </button>
-                                            <button onClick={handleDownload} className="text-xs font-bold text-green-600 hover:text-green-700 bg-green-50 px-3 py-1 rounded-lg border border-green-100 flex items-center gap-1 transition-colors">
-                                                <DownloadIconSmall /> Download ZIP
-                                            </button>
+                                            <button onClick={handleDownloadPDF} className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 px-3 py-1 rounded-lg border border-red-100 flex items-center gap-1 transition-colors"><PdfIcon /> Export PDF</button>
+                                            <button onClick={handleDownload} className="text-xs font-bold text-green-600 hover:text-green-700 bg-green-50 px-3 py-1 rounded-lg border border-green-100 flex items-center gap-1 transition-colors"><DownloadIconSmall /> Download ZIP</button>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -1535,61 +1323,32 @@ export default function App() {
                                                         <>
                                                             <img src={`data:image/png;base64,${image.base64}`} alt={`Shot ${index + 1}`} className="w-full h-full object-cover" />
                                                             <div className="absolute top-2 left-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded-full">Shot {index+1}</div>
-                                                            
-                                                            {/* Individual Image Buttons */}
                                                             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-col">
-                                                                <button
-                                                                    onClick={() => handleOpenVideoModal(index)}
-                                                                    className="bg-indigo-600 hover:bg-indigo-700 text-white p-1.5 rounded-full transition-colors backdrop-blur-sm shadow-sm"
-                                                                    title="Buat Video dari Gambar Ini"
-                                                                >
-                                                                    <VideoIcon />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDownloadSingleImage(image.base64!, index)}
-                                                                    className="bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-colors backdrop-blur-sm shadow-sm"
-                                                                    title="Download Gambar Ini"
-                                                                >
-                                                                    <DownloadIconSmall />
-                                                                </button>
+                                                                <button onClick={() => handleOpenVideoModal(index)} className="bg-indigo-600 hover:bg-indigo-700 text-white p-1.5 rounded-full transition-colors backdrop-blur-sm shadow-sm" title="Buat Video"><VideoIcon /></button>
+                                                                <button onClick={() => handleDownloadSingleImage(image.base64!, index)} className="bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-colors backdrop-blur-sm shadow-sm" title="Download"><DownloadIconSmall /></button>
                                                             </div>
                                                         </>
-                                                    ) : (
-                                                        <div className="flex items-center justify-center h-full text-red-400 text-xs">Gagal Load</div>
-                                                    )}
+                                                    ) : (<div className="flex items-center justify-center h-full text-red-400 text-xs">Gagal Load</div>)}
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* Script & Audio */}
                                 {showScriptSection && generatedContent.tiktokScript && (
                                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h3 className="text-sm font-bold uppercase text-gray-700">Naskah & Audio</h3>
+                                            <h3 className="text-sm font-bold uppercase text-gray-700">{selectedStyle.startsWith('poster_') ? 'Tagline & Caption' : 'Naskah & Audio'}</h3>
                                             <div className="flex gap-2">
-                                                <select value={ttsVoice} onChange={e => setTtsVoice(e.target.value)} className="bg-gray-50 border border-gray-200 text-xs rounded-lg px-2 py-1 outline-none">
-                                                    {TTS_VOICES.map(voice => <option key={voice.value} value={voice.value}>{voice.label}</option>)}
-                                                </select>
-                                                <button onClick={handleTts} disabled={isLoading} className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-1">
-                                                    {audioUrl ? <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg> : <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
-                                                    Generate Audio
-                                                </button>
+                                                <select value={ttsVoice} onChange={e => setTtsVoice(e.target.value)} className="bg-gray-50 border border-gray-200 text-xs rounded-lg px-2 py-1 outline-none">{TTS_VOICES.map(voice => <option key={voice.value} value={voice.value}>{voice.label}</option>)}</select>
+                                                <button onClick={handleTts} disabled={isLoading} className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-1">{audioUrl ? <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg> : <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>} Generate Audio</button>
                                             </div>
                                         </div>
                                         <textarea rows={4} value={script} onChange={e => setScript(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-indigo-500 outline-none leading-relaxed"></textarea>
-                                        
                                         {audioUrl && (
                                             <div className="flex items-center gap-2 mt-3">
                                                 <audio controls src={audioUrl} className="w-full h-8 flex-1"></audio>
-                                                <button 
-                                                    onClick={handleDownloadAudio}
-                                                    className="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2 rounded-lg transition-colors border border-gray-200"
-                                                    title="Download Audio (.wav)"
-                                                >
-                                                    <DownloadIconSmall />
-                                                </button>
+                                                <button onClick={handleDownloadAudio} className="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2 rounded-lg transition-colors border border-gray-200" title="Download Audio (.wav)"><DownloadIconSmall /></button>
                                             </div>
                                         )}
                                     </div>
@@ -1605,142 +1364,46 @@ export default function App() {
     const renderSettings = () => {
         const savedLicenseEncrypted = localStorage.getItem('engageProLicense');
         const realLicense = savedLicenseEncrypted ? window.atob(savedLicenseEncrypted) : '';
-        const maskedLicense = showLicenseKey 
-            ? realLicense 
-            : realLicense.replace(/^([^-]+)-([^-]+)-([^-]+)$/, "$1-****-$3");
+        const maskedLicense = showLicenseKey ? realLicense : realLicense.replace(/^([^-]+)-([^-]+)-([^-]+)$/, "$1-****-$3");
             
         return (
         <div className="max-w-2xl mx-auto animate-toastIn">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Pengaturan Akun</h2>
-            
-            {/* License Status Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                         <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                            Status Lisensi
-                        </h3>
-                        {realLicense ? (
-                            <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1">
-                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                AKTIF
-                            </span>
-                        ) : (
-                            <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-bold">INACTIVE</span>
-                        )}
+                         <h3 className="font-bold text-gray-800 flex items-center gap-2">Status Lisensi</h3>
+                        {realLicense ? <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>AKTIF</span> : <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-bold">INACTIVE</span>}
                     </div>
-                    
                     {realLicense && (
                         <div className="space-y-4">
                              <div className="relative">
                                 <label className="block text-xs font-medium text-gray-500 mb-1">Kode Lisensi Anda</label>
                                 <div className="flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        readOnly
-                                        value={maskedLicense}
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-600 font-mono text-sm"
-                                    />
-                                    <button 
-                                        onClick={() => setShowLicenseKey(!showLicenseKey)}
-                                        className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-500 rounded-lg px-3 transition-colors"
-                                        title={showLicenseKey ? "Sembunyikan" : "Tampilkan"}
-                                    >
-                                        {showLicenseKey ? <EyeOffIcon /> : <EyeIcon />}
-                                    </button>
+                                    <input type="text" readOnly value={maskedLicense} className="w-full px-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-600 font-mono text-sm" />
+                                    <button onClick={() => setShowLicenseKey(!showLicenseKey)} className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-500 rounded-lg px-3 transition-colors" title={showLicenseKey ? "Sembunyikan" : "Tampilkan"}>{showLicenseKey ? <EyeOffIcon /> : <EyeIcon />}</button>
                                 </div>
                             </div>
-                            
-                            <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 text-xs text-yellow-800">
-                                Lisensi ini tersimpan di browser ini. Jika Anda membersihkan cache atau ganti perangkat, Anda perlu memasukkannya lagi.
-                            </div>
-
-                            <div className="flex justify-end pt-2">
-                                <button 
-                                    onClick={handleDeactivateLicense}
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg text-xs font-bold transition-colors border border-transparent hover:border-red-100"
-                                >
-                                    Hapus Lisensi dari Perangkat Ini
-                                </button>
-                            </div>
+                            <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 text-xs text-yellow-800">Lisensi ini tersimpan di browser ini. Jika Anda membersihkan cache atau ganti perangkat, Anda perlu memasukkannya lagi.</div>
+                            <div className="flex justify-end pt-2"><button onClick={handleDeactivateLicense} className="text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg text-xs font-bold transition-colors border border-transparent hover:border-red-100">Hapus Lisensi dari Perangkat Ini</button></div>
                         </div>
                     )}
                 </div>
             </div>
-
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="p-6 space-y-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Nama Pengguna</label>
-                        <input 
-                            type="text" 
-                            value={userProfile.name} 
-                            onChange={(e) => setUserProfile(prev => ({ ...prev, name: e.target.value }))}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Google Gemini API Key</label>
-                        <input 
-                            type="password" 
-                            value={userProfile.apiKey} 
-                            onChange={(e) => setUserProfile(prev => ({ ...prev, apiKey: e.target.value }))}
-                            placeholder="AIzaSy..."
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono text-sm"
-                        />
-                         <p className="text-xs text-gray-500 mt-2">
-                            Dapatkan API Key di <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-indigo-600 hover:underline">Google AI Studio</a>. Key disimpan secara lokal di browser Anda.
-                        </p>
-                    </div>
-
+                    <div><label className="block text-sm font-medium text-gray-700 mb-2">Nama Pengguna</label><input type="text" value={userProfile.name} onChange={(e) => setUserProfile(prev => ({ ...prev, name: e.target.value }))} className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" /></div>
+                    <div><label className="block text-sm font-medium text-gray-700 mb-2">Google Gemini API Key</label><input type="password" value={userProfile.apiKey} onChange={(e) => setUserProfile(prev => ({ ...prev, apiKey: e.target.value }))} placeholder="AIzaSy..." className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono text-sm" /><p className="text-xs text-gray-500 mt-2">Dapatkan API Key di <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-indigo-600 hover:underline">Google AI Studio</a>. Key disimpan secara lokal di browser Anda.</p></div>
                     <hr className="border-gray-100" />
-
                     <div className="space-y-4">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                            <span className="w-1 h-5 bg-indigo-500 rounded-full"></span>
-                            Custom Brand Persona
-                        </h3>
+                        <h3 className="font-bold text-gray-800 flex items-center gap-2"><span className="w-1 h-5 bg-indigo-500 rounded-full"></span>Custom Brand Persona</h3>
                         <p className="text-sm text-gray-500">Isi data ini agar naskah yang dihasilkan lebih personal sesuai brand Anda.</p>
-                        
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Nama Brand (Brand Name)</label>
-                            <input 
-                                type="text" 
-                                value={userProfile.brandName || ''} 
-                                onChange={(e) => setUserProfile(prev => ({ ...prev, brandName: e.target.value }))}
-                                placeholder="Contoh: Kopi Senja, Toko Berkah"
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Tone of Voice (Gaya Bicara)</label>
-                            <input 
-                                type="text" 
-                                value={userProfile.toneOfVoice || ''} 
-                                onChange={(e) => setUserProfile(prev => ({ ...prev, toneOfVoice: e.target.value }))}
-                                placeholder="Contoh: Santai & Akrab, Profesional & Mewah, Lucu & Receh"
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
-                            <input 
-                                type="text" 
-                                value={userProfile.targetAudience || ''} 
-                                onChange={(e) => setUserProfile(prev => ({ ...prev, targetAudience: e.target.value }))}
-                                placeholder="Contoh: Gen Z, Ibu Rumah Tangga, Pria Dewasa"
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none"
-                            />
-                        </div>
+                        <div><label className="block text-sm font-medium text-gray-700 mb-2">Nama Brand (Brand Name)</label><input type="text" value={userProfile.brandName || ''} onChange={(e) => setUserProfile(prev => ({ ...prev, brandName: e.target.value }))} placeholder="Contoh: Kopi Senja, Toko Berkah" className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
+                        <div><label className="block text-sm font-medium text-gray-700 mb-2">Tone of Voice (Gaya Bicara)</label><input type="text" value={userProfile.toneOfVoice || ''} onChange={(e) => setUserProfile(prev => ({ ...prev, toneOfVoice: e.target.value }))} placeholder="Contoh: Santai & Akrab, Profesional & Mewah, Lucu & Receh" className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
+                        <div><label className="block text-sm font-medium text-gray-700 mb-2">Target Audience</label><input type="text" value={userProfile.targetAudience || ''} onChange={(e) => setUserProfile(prev => ({ ...prev, targetAudience: e.target.value }))} placeholder="Contoh: Gen Z, Ibu Rumah Tangga, Pria Dewasa" className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none" /></div>
                     </div>
-
                 </div>
-                <div className="bg-gray-50 px-6 py-4 flex justify-end">
-                    <button onClick={() => showToast("Pengaturan tersimpan!", 'success')} className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors">
-                        Simpan Perubahan
-                    </button>
-                </div>
+                <div className="bg-gray-50 px-6 py-4 flex justify-end"><button onClick={() => showToast("Pengaturan tersimpan!", 'success')} className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors">Simpan Perubahan</button></div>
             </div>
         </div>
     );
@@ -1749,195 +1412,41 @@ export default function App() {
     const renderHelp = () => (
          <div className="max-w-3xl mx-auto animate-toastIn pb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Pusat Bantuan</h2>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all group">
-                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
-                    </div>
-                    <h3 className="font-bold text-gray-900 mb-2">Ambil API Key</h3>
-                    <p className="text-gray-500 text-sm">Dapatkan Google Gemini API Key secara gratis di sini untuk mulai membuat konten.</p>
-                </a>
-
-                <a href="https://www.youtube.com/watch?v=ne3SLfF_gk0" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all group">
-                    <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-                    </div>
-                    <h3 className="font-bold text-gray-900 mb-2">Tutorial Video</h3>
-                    <p className="text-gray-500 text-sm">Tonton panduan langkah demi langkah cara membuat API Key di YouTube.</p>
-                </a>
-
-                <a href="https://chat.whatsapp.com/Eizt8X0XsSr9fsRObnOWTM" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all group">
-                    <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-                    </div>
-                    <h3 className="font-bold text-gray-900 mb-2">Komunitas WhatsApp</h3>
-                    <p className="text-gray-500 text-sm">Bergabung dengan kreator lain dan dapatkan update terbaru.</p>
-                </a>
-                 
-                <a href="mailto:info@pondokgue.digital" className="col-span-1 md:col-span-2 bg-indigo-50 p-6 rounded-2xl border border-indigo-100 hover:bg-indigo-100 transition-all text-center">
-                    <p className="text-indigo-800 font-medium">Butuh bantuan teknis? <span className="font-bold underline">Hubungi Admin via Email</span></p>
-                </a>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all group"><div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg></div><h3 className="font-bold text-gray-900 mb-2">Ambil API Key</h3><p className="text-gray-500 text-sm">Dapatkan Google Gemini API Key secara gratis di sini untuk mulai membuat konten.</p></a>
+                <a href="https://www.youtube.com/watch?v=ne3SLfF_gk0" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all group"><div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></div><h3 className="font-bold text-gray-900 mb-2">Tutorial Video</h3><p className="text-gray-500 text-sm">Tonton panduan langkah demi langkah cara membuat API Key di YouTube.</p></a>
+                <a href="https://chat.whatsapp.com/Eizt8X0XsSr9fsRObnOWTM" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all group"><div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg></div><h3 className="font-bold text-gray-900 mb-2">Komunitas WhatsApp</h3><p className="text-gray-500 text-sm">Bergabung dengan kreator lain dan dapatkan update terbaru.</p></a>
+                <a href="mailto:info@pondokgue.digital" className="col-span-1 md:col-span-2 bg-indigo-50 p-6 rounded-2xl border border-indigo-100 hover:bg-indigo-100 transition-all text-center"><p className="text-indigo-800 font-medium">Butuh bantuan teknis? <span className="font-bold underline">Hubungi Admin via Email</span></p></a>
             </div>
-
-            {/* Text Tutorial Section */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Panduan Lengkap: Cara Membuat API Key</h3>
-                
                 <div className="space-y-8 text-sm text-gray-600">
-                    <section>
-                        <p className="mb-4">
-                            Google Gemini API Key adalah kunci rahasia yang memungkinkan EngagePro AI Studio terhubung dengan otak kecerdasan buatan Google. 
-                            Ikuti langkah mudah berikut untuk mendapatkannya secara gratis:
-                        </p>
-                    </section>
-
-                    <section>
-                        <h4 className="font-bold text-gray-900 text-base mb-2 flex items-center gap-2">
-                            <span className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full text-xs">1</span>
-                            Masuk ke Google AI Studio
-                        </h4>
-                        <ul className="list-disc pl-10 space-y-1 marker:text-gray-400">
-                            <li>Buka browser dan kunjungi <a href="https://aistudio.google.com" target="_blank" className="text-indigo-600 hover:underline font-medium">Google AI Studio (aistudio.google.com)</a>.</li>
-                            <li>Klik tombol <strong>Sign In</strong> dan masuk menggunakan akun Google (Gmail) Anda.</li>
-                            <li>Jika muncul persetujuan syarat & ketentuan, klik setuju/accept.</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h4 className="font-bold text-gray-900 text-base mb-2 flex items-center gap-2">
-                            <span className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full text-xs">2</span>
-                            Buat Project Baru
-                        </h4>
-                        <ul className="list-disc pl-10 space-y-1 marker:text-gray-400">
-                            <li>Di halaman utama, cari tombol <strong>"Get API key"</strong> di menu sebelah kiri atas.</li>
-                            <li>Klik tombol biru bertuliskan <strong>"Create API key"</strong>.</li>
-                            <li>Pilih opsi <strong>"Create API key in new project"</strong>.</li>
-                            <li>Tunggu beberapa detik hingga proses selesai.</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h4 className="font-bold text-gray-900 text-base mb-2 flex items-center gap-2">
-                            <span className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full text-xs">3</span>
-                            Salin & Tempel Kunci
-                        </h4>
-                        <ul className="list-disc pl-10 space-y-1 marker:text-gray-400">
-                            <li>Akan muncul kode acak yang panjang (Dimulai dengan "AIza...").</li>
-                            <li>Klik tombol <strong>Copy</strong> di sebelahnya.</li>
-                            <li>Kembali ke aplikasi EngagePro AI Studio ini.</li>
-                            <li>Masuk ke menu <strong>Pengaturan</strong> di sidebar kiri.</li>
-                            <li>Tempel (Paste) kode tersebut ke dalam kolom "Google Gemini API Key".</li>
-                            <li>Klik <strong>Simpan Perubahan</strong>. Selesai!</li>
-                        </ul>
-                    </section>
-
-                    {/* FAQ Box */}
-                    <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 mt-6">
-                        <h4 className="font-bold text-gray-900 text-base mb-4">FAQ (Pertanyaan Umum)</h4>
-                        <div className="space-y-4">
-                            <div>
-                                <p className="font-bold text-gray-800 text-xs uppercase mb-1">Apakah ini berbayar?</p>
-                                <p>Tidak. Anda bisa menggunakan <strong>Free Tier</strong> dari Google tanpa perlu memasukkan kartu kredit. Free tier sudah cukup untuk penggunaan normal aplikasi ini.</p>
-                            </div>
-                            <div>
-                                <p className="font-bold text-gray-800 text-xs uppercase mb-1">Apa itu Error 429 (Too Many Requests)?</p>
-                                <p>Jika Anda menggunakan akun gratis, Google membatasi kecepatan pembuatan. EngagePro sudah memiliki sistem antrian otomatis untuk mencegah hal ini, namun jika terjadi, cukup tunggu 1 menit lalu coba lagi.</p>
-                            </div>
-                            <div>
-                                <p className="font-bold text-gray-800 text-xs uppercase mb-1">Apakah kunci saya aman?</p>
-                                <p>Ya. EngagePro menyimpan API Key Anda di dalam browser Anda sendiri (Local Storage). Kunci tidak dikirim ke server kami, melainkan langsung ke Google saat Anda menekan tombol Generate.</p>
-                            </div>
-                        </div>
-                    </div>
+                    <section><p className="mb-4">Google Gemini API Key adalah kunci rahasia yang memungkinkan EngagePro AI Studio terhubung dengan otak kecerdasan buatan Google. Ikuti langkah mudah berikut untuk mendapatkannya secara gratis:</p></section>
+                    <section><h4 className="font-bold text-gray-900 text-base mb-2 flex items-center gap-2"><span className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full text-xs">1</span>Masuk ke Google AI Studio</h4><ul className="list-disc pl-10 space-y-1 marker:text-gray-400"><li>Buka browser dan kunjungi <a href="https://aistudio.google.com" target="_blank" className="text-indigo-600 hover:underline font-medium">Google AI Studio (aistudio.google.com)</a>.</li><li>Klik tombol <strong>Sign In</strong> dan masuk menggunakan akun Google (Gmail) Anda.</li><li>Jika muncul persetujuan syarat & ketentuan, klik setuju/accept.</li></ul></section>
+                    <section><h4 className="font-bold text-gray-900 text-base mb-2 flex items-center gap-2"><span className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full text-xs">2</span>Buat Project Baru</h4><ul className="list-disc pl-10 space-y-1 marker:text-gray-400"><li>Di halaman utama, cari tombol <strong>"Get API key"</strong> di menu sebelah kiri atas.</li><li>Klik tombol biru bertuliskan <strong>"Create API key"</strong>.</li><li>Pilih opsi <strong>"Create API key in new project"</strong>.</li><li>Tunggu beberapa detik hingga proses selesai.</li></ul></section>
+                    <section><h4 className="font-bold text-gray-900 text-base mb-2 flex items-center gap-2"><span className="bg-indigo-100 text-indigo-700 w-6 h-6 flex items-center justify-center rounded-full text-xs">3</span>Salin & Tempel Kunci</h4><ul className="list-disc pl-10 space-y-1 marker:text-gray-400"><li>Akan muncul kode acak yang panjang (Dimulai dengan "AIza...").</li><li>Klik tombol <strong>Copy</strong> di sebelahnya.</li><li>Kembali ke aplikasi EngagePro AI Studio ini.</li><li>Masuk ke menu <strong>Pengaturan</strong> di sidebar kiri.</li><li>Tempel (Paste) kode tersebut ke dalam kolom "Google Gemini API Key".</li><li>Klik <strong>Simpan Perubahan</strong>. Selesai!</li></ul></section>
+                    <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 mt-6"><h4 className="font-bold text-gray-900 text-base mb-4">FAQ (Pertanyaan Umum)</h4><div className="space-y-4"><div><p className="font-bold text-gray-800 text-xs uppercase mb-1">Apakah ini berbayar?</p><p>Tidak. Anda bisa menggunakan <strong>Free Tier</strong> dari Google tanpa perlu memasukkan kartu kredit. Free tier sudah cukup untuk penggunaan normal aplikasi ini.</p></div><div><p className="font-bold text-gray-800 text-xs uppercase mb-1">Apa itu Error 429 (Too Many Requests)?</p><p>Jika Anda menggunakan akun gratis, Google membatasi kecepatan pembuatan. EngagePro sudah memiliki sistem antrian otomatis untuk mencegah hal ini, namun jika terjadi, cukup tunggu 1 menit lalu coba lagi.</p></div><div><p className="font-bold text-gray-800 text-xs uppercase mb-1">Apakah kunci saya aman?</p><p>Ya. EngagePro menyimpan API Key Anda di dalam browser Anda sendiri (Local Storage). Kunci tidak dikirim ke server kami, melainkan langsung ke Google saat Anda menekan tombol Generate.</p></div></div></div>
                 </div>
             </div>
         </div>
     );
 
-    // --- Main Render Structure ---
-
     return (
         <div className="bg-gray-50 min-h-screen font-sans text-gray-900 flex">
-            {/* Sidebar */}
             {renderSidebar()}
-            
-            {/* Main Content Wrapper */}
             <div className="flex-1 flex flex-col lg:ml-64 min-h-screen transition-all duration-300">
-                
-                {/* Mobile Header (Hamburger) */}
-                <header className="bg-white border-b border-gray-200 lg:hidden sticky top-0 z-40">
-                    <div className="px-4 py-3 flex items-center justify-between">
-                         <div className="flex items-center gap-2">
-                             <div className="bg-indigo-600 text-white p-1 rounded shadow-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
-                            </div>
-                            <span className="font-bold text-gray-900">EngagePro AI</span>
-                        </div>
-                        <button onClick={() => setSidebarOpen(true)} className="text-gray-500 hover:text-indigo-600 p-1">
-                            <MenuIcon />
-                        </button>
-                    </div>
-                </header>
-
-                {/* Dashboard Header (Desktop) */}
+                <header className="bg-white border-b border-gray-200 lg:hidden sticky top-0 z-40"><div className="px-4 py-3 flex items-center justify-between"><div className="flex items-center gap-2"><div className="bg-indigo-600 text-white p-1 rounded shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg></div><span className="font-bold text-gray-900">EngagePro AI</span></div><button onClick={() => setSidebarOpen(true)} className="text-gray-500 hover:text-indigo-600 p-1"><MenuIcon /></button></div></header>
                 <div className="hidden lg:flex items-center justify-between px-8 py-6 bg-white border-b border-gray-200">
                      <div>
-                        <h2 className="text-xl font-bold text-gray-900 capitalize">
-                            {currentView === 'dashboard' ? (currentStyleName || 'Content Studio') : 
-                             currentView === 'prompt_lab' ? (
-                                promptLabMode === 'expander' ? 'Prompt Lab: Magic Expander' :
-                                promptLabMode === 'scanner' ? 'Prompt Lab: Image Scanner' :
-                                'Prompt Lab: Video Prompter'
-                             ) :
-                             currentView === 'history' ? 'Riwayat' :
-                             currentView === 'settings' ? 'Kelola preferensi dan API Key Anda.' : 'Pusat bantuan dan tutorial.'}
-                        </h2>
-                        <p className="text-sm text-gray-500">
-                            {currentView === 'dashboard' ? 'Buat aset visual dan naskah dengan AI.' : 
-                             currentView === 'prompt_lab' ? 'Eksperimen dengan prompt AI Art & Video.' :
-                             currentView === 'history' ? 'Kelola proyek yang telah Anda buat.' :
-                             currentView === 'settings' ? 'Kelola preferensi dan API Key Anda.' : 'Pusat bantuan dan tutorial.'}
-                        </p>
+                        <h2 className="text-xl font-bold text-gray-900 capitalize">{currentView === 'dashboard' ? (currentStyleName || 'Content Studio') : currentView === 'prompt_lab' ? (promptLabMode === 'expander' ? 'Prompt Lab: Magic Expander' : promptLabMode === 'scanner' ? 'Prompt Lab: Image Scanner' : 'Prompt Lab: Video Prompter') : currentView === 'history' ? 'Riwayat' : currentView === 'settings' ? 'Kelola preferensi dan API Key Anda.' : 'Pusat bantuan dan tutorial.'}</h2>
+                        <p className="text-sm text-gray-500">{currentView === 'dashboard' ? 'Buat aset visual dan naskah dengan AI.' : currentView === 'prompt_lab' ? 'Eksperimen dengan prompt AI Art & Video.' : currentView === 'history' ? 'Kelola proyek yang telah Anda buat.' : currentView === 'settings' ? 'Kelola preferensi dan API Key Anda.' : 'Pusat bantuan dan tutorial.'}</p>
                     </div>
-                    
-                    {/* Dynamic API Status */}
-                    <button 
-                        onClick={() => !isApiKeyAvailable && setCurrentView('settings')}
-                        className={`flex items-center gap-3 px-3 py-1.5 rounded-lg transition-colors ${!isApiKeyAvailable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default'}`}
-                    >
-                        <span className="flex h-3 w-3 relative">
-                          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isApiKeyAvailable ? 'bg-green-400' : 'bg-red-400'}`}></span>
-                          <span className={`relative inline-flex rounded-full h-3 w-3 ${isApiKeyAvailable ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                        </span>
-                        <span className={`text-sm font-medium ${isApiKeyAvailable ? 'text-gray-500' : 'text-red-500'}`}>
-                            {isApiKeyAvailable ? 'API Ready' : 'Set API Key'}
-                        </span>
-                    </button>
+                    <button onClick={() => !isApiKeyAvailable && setCurrentView('settings')} className={`flex items-center gap-3 px-3 py-1.5 rounded-lg transition-colors ${!isApiKeyAvailable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default'}`}><span className="flex h-3 w-3 relative"><span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isApiKeyAvailable ? 'bg-green-400' : 'bg-red-400'}`}></span><span className={`relative inline-flex rounded-full h-3 w-3 ${isApiKeyAvailable ? 'bg-green-500' : 'bg-red-500'}`}></span></span><span className={`text-sm font-medium ${isApiKeyAvailable ? 'text-gray-500' : 'text-red-500'}`}>{isApiKeyAvailable ? 'API Ready' : 'Set API Key'}</span></button>
                 </div>
-
-                {/* Main Viewport */}
                 <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
-                    {/* Loading Overlay */}
                     {isLoading && (
-                        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
-                            <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 flex flex-col items-center">
-                                <SpinnerIcon />
-                                <p className="mt-4 text-gray-800 font-medium animate-pulse">{loadingMessage}</p>
-                            </div>
-                        </div>
+                        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center"><div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 flex flex-col items-center"><SpinnerIcon /><p className="mt-4 text-gray-800 font-medium animate-pulse">{loadingMessage}</p></div></div>
                     )}
-
-                    {/* Toast Notification Container */}
-                    <div className="fixed bottom-6 right-6 z-50 space-y-2 w-full max-w-sm pointer-events-none">
-                        {toasts.map(toast => (
-                            <div key={toast.id} className={`pointer-events-auto bg-white border-l-4 ${toast.type === 'error' ? 'border-red-500' : toast.type === 'success' ? 'border-green-500' : 'border-blue-500'} shadow-lg rounded-r-lg p-4 flex items-center animate-toastIn`}>
-                                <div className="flex-1 text-sm font-medium text-gray-900">{toast.message}</div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Views */}
                     {currentView === 'dashboard' && renderDashboard()}
                     {currentView === 'prompt_lab' && renderPromptLab()}
                     {currentView === 'history' && renderHistory()}
@@ -1945,76 +1454,21 @@ export default function App() {
                     {currentView === 'help' && renderHelp()}
                 </main>
             </div>
-
-            {/* Video Modal (Tools Selector) */}
             {videoModalData.isOpen && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
                      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative flex flex-col max-h-[90vh]">
-                        <button onClick={() => setVideoModalData({ ...videoModalData, isOpen: false })} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10">
-                            <CloseIcon />
-                        </button>
-                        
-                        <div className="text-center mb-4">
-                            <h2 className="text-xl font-bold text-gray-900">Buat Video AI</h2>
-                            <p className="text-xs text-gray-500">Gambar dan prompt telah siap.</p>
-                        </div>
-
+                        <button onClick={() => setVideoModalData({ ...videoModalData, isOpen: false })} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"><CloseIcon /></button>
+                        <div className="text-center mb-4"><h2 className="text-xl font-bold text-gray-900">Buat Video AI</h2><p className="text-xs text-gray-500">Gambar dan prompt telah siap.</p></div>
                         <div className="overflow-y-auto pr-1 custom-scrollbar">
-                            {/* Selected Image Preview */}
-                            {videoModalData.imageUrl && (
-                                <div className="mb-4 rounded-xl overflow-hidden border border-gray-200 relative group">
-                                    <img src={videoModalData.imageUrl} alt="Reference" className="w-full h-48 object-cover" />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                         <a 
-                                            href={videoModalData.imageUrl} 
-                                            download="reference_image.png"
-                                            className="bg-white text-gray-900 px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg hover:bg-gray-100"
-                                         >
-                                            Download Gambar
-                                         </a>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Prompt Box */}
-                            <div className="mb-6">
-                                <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Prompt Animasi (Tersalin Otomatis)</label>
-                                <div className="relative">
-                                    <textarea 
-                                        readOnly 
-                                        value={videoModalData.prompt} 
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 h-20 resize-none outline-none focus:ring-1 focus:ring-indigo-500"
-                                    ></textarea>
-                                    <button 
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(videoModalData.prompt);
-                                            showToast("Prompt disalin!", 'success');
-                                        }}
-                                        className="absolute top-2 right-2 text-gray-400 hover:text-indigo-600 bg-white rounded p-1 shadow-sm border border-gray-100"
-                                        title="Salin lagi"
-                                    >
-                                        <CopyIcon />
-                                    </button>
-                                </div>
-                            </div>
-                            
+                            {videoModalData.imageUrl && (<div className="mb-4 rounded-xl overflow-hidden border border-gray-200 relative group"><img src={videoModalData.imageUrl} alt="Reference" className="w-full h-48 object-cover" /><div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><a href={videoModalData.imageUrl} download="reference_image.png" className="bg-white text-gray-900 px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg hover:bg-gray-100">Download Gambar</a></div></div>)}
+                            <div className="mb-6"><label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Prompt Animasi (Tersalin Otomatis)</label><div className="relative"><textarea readOnly value={videoModalData.prompt} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 h-20 resize-none outline-none focus:ring-1 focus:ring-indigo-500"></textarea><button onClick={() => { navigator.clipboard.writeText(videoModalData.prompt); showToast("Prompt disalin!", 'success'); }} className="absolute top-2 right-2 text-gray-400 hover:text-indigo-600 bg-white rounded p-1 shadow-sm border border-gray-100" title="Salin lagi"><CopyIcon /></button></div></div>
                             <hr className="border-gray-100 mb-6" />
-
                             <div className="space-y-3">
                                 <p className="text-center text-sm font-medium text-gray-800 mb-2">Pilih Tools Video AI:</p>
-                                <a href="https://aitestkitchen.withgoogle.com/tools/video-fx" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-3 px-4 rounded-xl border border-indigo-200 transition-colors flex items-center justify-center gap-2">
-                                    <GoogleIcon />
-                                    Buka Google VideoFX (Labs)
-                                </a>
-                                <a href="https://www.meta.ai/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-xl border border-blue-200 transition-colors flex items-center justify-center gap-2">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-1.07 3.97-2.1 5.39z"/></svg>
-                                    Buka Meta AI
-                                </a>
+                                <a href="https://aitestkitchen.withgoogle.com/tools/video-fx" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-3 px-4 rounded-xl border border-indigo-200 transition-colors flex items-center justify-center gap-2"><GoogleIcon />Buka Google VideoFX (Labs)</a>
+                                <a href="https://www.meta.ai/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-xl border border-blue-200 transition-colors flex items-center justify-center gap-2"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-1.07 3.97-2.1 5.39z"/></svg>Buka Meta AI</a>
                                 <a href="https://dreamina.capcut.com/ai-tool/home" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-gray-50 hover:bg-gray-100 text-gray-800 font-medium py-3 px-4 rounded-xl border border-gray-200 transition-colors">Buka Dreamina (CapCut)</a>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <a href="https://runwayml.com/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-white hover:bg-gray-50 text-gray-600 text-xs font-medium py-2 px-2 rounded-lg border border-gray-200 transition-colors">RunwayML</a>
-                                    <a href="https://klingai.com/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-white hover:bg-gray-50 text-gray-600 text-xs font-medium py-2 px-2 rounded-lg border border-gray-200 transition-colors">Kling AI</a>
-                                </div>
+                                <div className="grid grid-cols-2 gap-3"><a href="https://runwayml.com/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-white hover:bg-gray-50 text-gray-600 text-xs font-medium py-2 px-2 rounded-lg border border-gray-200 transition-colors">RunwayML</a><a href="https://klingai.com/" target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-white hover:bg-gray-50 text-gray-600 text-xs font-medium py-2 px-2 rounded-lg border border-gray-200 transition-colors">Kling AI</a></div>
                             </div>
                         </div>
                     </div>
