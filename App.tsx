@@ -507,6 +507,14 @@ export default function App() {
         setCurrentView('dashboard');
         setGeneratedContent(null);
         setUploadedFiles({ product: null, model: null, background: null, fashionItems: [], locations: [] });
+        
+        // --- ADDED RESET LOGIC ---
+        setDescription('');
+        setTravelDescription('');
+        setScript('');
+        setAudioUrl(null);
+        // -------------------------
+
         if (window.innerWidth < 1024) setSidebarOpen(false);
     }, []);
 
