@@ -117,9 +117,9 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
     `;
 
     let userQuery = `
-        Deskripsi User: ${description || "Tidak ada deskripsi"}
-        Bahasa Naskah: ${lang}
-        Gaya Naskah: ${scriptStyle}
+        Instruksi Visual & Detail Produk dari User: ${description || "Tidak ada instruksi khusus, berikan variasi terbaik."}
+        Bahasa: ${lang}
+        Gaya: ${scriptStyle}
         Tugas: Hasilkan JSON rencana kreatif.
     `;
     let useGoogleSearch = false;
@@ -164,19 +164,18 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
         const systemInstruction = `${baseSystemInstruction}
             GAYA: PHOTO STUDIO / POSTER MAKER (${posterVibe}).
             
-            INSTRUKSI UTAMA (CLEAN BACKGROUND & TAGLINE):
-            1. **BACKGROUND BERSIH:** User ingin membuat poster. Prompt gambar HARUS meminta "Minimalist Background" dan "Negative Space" (ruang kosong) di bagian atas atau samping agar user bisa menambahkan teks/logo dengan mudah. Hindari background yang terlalu ramai (cluttered).
-            2. **TAGLINE GENERATOR:** Di field 'tiktokScript', JANGAN buat naskah video panjang. GANTI dengan format ini:
-               "HEADLINE: [Buat Tagline Pendek & Catchy 3-5 Kata]
-                CAPTION: [Buat Caption Instagram yang menarik]"
+            INSTRUKSI UTAMA (PRIORITAS USER):
+            1. **IKUTI PERINTAH USER:** Teks pada 'Instruksi Visual & Detail Produk' adalah Brief Kreatif. Jika user meminta "Background Biru" atau "Gaya Minimalis", Anda WAJIB menyertakan elemen tersebut di semua Shot Prompts.
+            2. **BACKGROUND BERSIH:** Pastikan prompt gambar meminta "Minimalist Background" dan "Negative Space" untuk penempatan teks.
+            3. **TAGLINE GENERATOR:** Di field 'tiktokScript', gunakan format:
+               "HEADLINE: [Tagline Catchy 3-5 Kata]
+                CAPTION: [Caption Instagram menarik]"
             
             INSTRUKSI SHOT PROMPTS (4 VARIASI):
-            1. **Hero Shot:** Produk di tengah, lighting dramatis, background bersih.
-            2. **Lifestyle:** Produk di lingkungan natural (misal: di meja makan, di wastafel, di tangan).
+            1. **Hero Shot:** Produk di tengah, lighting dramatis, background bersih sesuai keinginan user.
+            2. **Lifestyle:** Produk di lingkungan natural (sesuai brief user).
             3. **Creative:** Komposisi artistik (Floating, Flatlay, Geometris).
             4. **Detail:** Close-up texture shot (Macro).
-            
-            PENTING: 'shotPrompts' HARUS berisi 4 item array string yang menjelaskan visual gambar secara detail sesuai variasi di atas.
             
             Akhiri setiap prompt dengan: "${imageQualityPrompt}, ${posterVibe}, clean composition, negative space for text".
         `;
@@ -237,7 +236,7 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
                 2. **MANUSIA:** Tambahkan manusia untuk skala.
                 
                 DETAIL NASKAH (tiktokScript): Naskah ${lang} (40-60 kata).
-                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}. Akhiri dengan "keep architecture unchanged. ${imageQualityPrompt}".`;
+                DETAIL PROMPT GAMBAR (shotPrompts): Hasilkan ${shots}. Akhiri with "keep architecture unchanged. ${imageQualityPrompt}".`;
             userQuery = `Gaya Konten: ${style}\n(Gunakan Google Search untuk info properti).\n${userQuery}`;
             useGoogleSearch = true;
             break;

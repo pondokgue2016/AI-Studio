@@ -1299,7 +1299,23 @@ export default function App() {
                                         )}
                                     </div>
                                     <div className="mt-4">
-                                        {stylesRequiringDescription.includes(selectedStyle) && <div className="space-y-1"><label className="block text-xs font-medium text-gray-500">Deskripsi Konten</label><textarea rows={3} value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Jelaskan produk anda..."></textarea></div>}
+                                        {stylesRequiringDescription.includes(selectedStyle) && (
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-bold text-indigo-600 uppercase tracking-tight">
+                                                    {selectedStyle.startsWith('poster_') ? 'Instruksi Visual & Detail Produk' : 'Deskripsi Konten'}
+                                                </label>
+                                                <textarea 
+                                                    rows={3} 
+                                                    value={description} 
+                                                    onChange={e => setDescription(e.target.value)} 
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
+                                                    placeholder={selectedStyle.startsWith('poster_') 
+                                                        ? "Cth: Tema musim panas, latar belakang biru cerah dengan dedaunan tropis, ada efek bulir air segar..." 
+                                                        : "Jelaskan produk anda..."}
+                                                ></textarea>
+                                                {selectedStyle.startsWith('poster_') && <p className="text-[10px] text-gray-400 italic leading-tight">Berikan "Perintah" visual atau jelaskan detail produk Anda di sini.</p>}
+                                            </div>
+                                        )}
                                         {stylesRequiringTravelDesc.includes(selectedStyle) && <div className="space-y-1"><label className="block text-xs font-medium text-gray-500">Deskripsi Lokasi</label><textarea rows={3} value={travelDescription} onChange={e => setTravelDescription(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Jelaskan lokasi/properti..."></textarea></div>}
                                     </div>
                                 </div>
@@ -1468,7 +1484,7 @@ export default function App() {
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
                      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative flex flex-col max-h-[90vh]">
                         <button onClick={() => setVideoModalData({ ...videoModalData, isOpen: false })} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"><CloseIcon /></button>
-                        <div className="text-center mb-4"><h2 className="text-xl font-bold text-gray-900">Buat Video AI</h2><p className="text-xs text-gray-500">Gambar dan prompt telah siap.</p></div>
+                        <div className="text-center mb-4"><h2 className="text-xl font-bold text-gray-900">Buat Video AI</h2><p className="text-xs text-gray-500">Gambar and prompt telah siap.</p></div>
                         <div className="overflow-y-auto pr-1 custom-scrollbar">
                             {videoModalData.imageUrl && (<div className="mb-4 rounded-xl overflow-hidden border border-gray-200 relative group"><img src={videoModalData.imageUrl} alt="Reference" className="w-full h-48 object-cover" /><div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><a href={videoModalData.imageUrl} download="reference_image.png" className="bg-white text-gray-900 px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg hover:bg-gray-100">Download Gambar</a></div></div>)}
                             <div className="mb-6"><label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Prompt Animasi (Tersalin Otomatis)</label><div className="relative"><textarea readOnly value={videoModalData.prompt} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-xs text-gray-700 h-20 resize-none outline-none focus:ring-1 focus:ring-indigo-500"></textarea><button onClick={() => { navigator.clipboard.writeText(videoModalData.prompt); showToast("Prompt disalin!", 'success'); }} className="absolute top-2 right-2 text-gray-400 hover:text-indigo-600 bg-white rounded p-1 shadow-sm border border-gray-100" title="Salin lagi"><CopyIcon /></button></div></div>
