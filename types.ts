@@ -2,8 +2,7 @@
 export type ContentStyle = 
     // Video Styles
     | 'direct' | 'quick_review' | 'fashion_broll' | 'travel' | 'property' | 'treadmill_fashion_show' | 'aesthetic_hands_on' | 'food_promo'
-    // Poster Styles
-    | 'poster_food' | 'poster_beauty' | 'poster_tech' | 'poster_property';
+;
 
 export type ScriptStyle = 'direct' | 'poetic' | 'absurd' | 'informative' | 'humorous' | 'mysterious';
 
