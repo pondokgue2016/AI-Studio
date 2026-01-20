@@ -83,7 +83,7 @@ const GoogleIcon = () => (
 )
 
 const CopyIcon = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
 );
 
 const TrashIcon = () => (
@@ -266,6 +266,7 @@ const FileInput: React.FC<FileInputProps> = ({ id, label, files, onFilesChange, 
 
 // LICENSE LOGIC HELPER
 const PREFIX = 'PRO';
+const normalizeLicenseInput = (value: string) => value.replace(/\s+/g, '').replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
 const generateLicenseKey = () => {
     // Generate 4 Random Chars
     const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase(); 
@@ -303,7 +304,6 @@ export default function App() {
     
     // Menu States (New Structure)
     const [isVideoMenuOpen, setIsVideoMenuOpen] = useState(true);
-    const [isPosterMenuOpen, setIsPosterMenuOpen] = useState(true);
     const [isPromptLabMenuOpen, setIsPromptLabMenuOpen] = useState(true);
     
     // License State
@@ -364,7 +364,6 @@ export default function App() {
 
     // Filter styles for sidebar grouping
     const videoStyles = useMemo(() => CONTENT_STYLES.filter(s => s.category === 'video'), []);
-    const photoStyles = useMemo(() => CONTENT_STYLES.filter(s => s.category === 'photo'), []);
 
     // --- Effects ---
     
@@ -459,7 +458,8 @@ export default function App() {
         setLoadingMessage("Memverifikasi...");
         await new Promise(resolve => setTimeout(resolve, 800));
 
-        if (validateLicenseKey(licenseInput.trim().toUpperCase())) {
+        const normalizedLicense = normalizeLicenseInput(licenseInput);
+        if (validateLicenseKey(normalizedLicense)) {
             setIsLicensed(true);
             
             // Save Name & License
@@ -467,7 +467,7 @@ export default function App() {
             setUserProfile(newProfile);
             localStorage.setItem('engageProProfile', JSON.stringify(newProfile));
             
-            localStorage.setItem('engageProLicense', window.btoa(licenseInput.trim().toUpperCase()));
+            localStorage.setItem('engageProLicense', window.btoa(normalizedLicense));
             showToast(`Halo ${onboardingName.trim()}! Selamat Datang.`, 'success');
         } else {
             showToast("Kode Lisensi Tidak Valid.", 'error');
@@ -483,7 +483,7 @@ export default function App() {
     const handlePasteLicense = async () => {
         try {
             const text = await navigator.clipboard.readText();
-            setLicenseInput(text);
+            setLicenseInput(normalizeLicenseInput(text));
             showToast("Berhasil ditempel!", 'success');
         } catch (err) {
             console.warn('Clipboard read permission denied, fallback to manual focus', err);
@@ -663,15 +663,8 @@ export default function App() {
             return;
         }
 
-        // VALIDATION FOR POSTER
-        if (selectedStyle && selectedStyle.startsWith('poster_') && !uploadedFiles.product) {
-            showToast("Silakan upload foto produk terlebih dahulu.", 'warning');
-            return;
-        }
-
         const descriptionlessStyles: ContentStyle[] = [
-            'fashion_broll', 'treadmill_fashion_show', 'aesthetic_hands_on',
-            'poster_food', 'poster_beauty', 'poster_tech', 'poster_property'
+            'fashion_broll', 'treadmill_fashion_show', 'aesthetic_hands_on'
         ];
         const currentDescription = ['travel', 'property'].includes(selectedStyle) ? travelDescription : description;
         
@@ -1019,13 +1012,7 @@ export default function App() {
     
     const mainAssetConfig = useMemo(() => {
         if (!selectedStyle) return null;
-        
-        // POSTER LOGIC (New v2.5)
-        if (selectedStyle.startsWith('poster_')) {
-             return { id: 'product', label: 'Foto Produk/Objek Utama (Wajib, 1)', multiple: false, maxFiles: 1, files: uploadedFiles.product };
-        }
 
-        // VIDEO LOGIC
         switch (selectedStyle) {
             case 'direct':
             case 'quick_review':
@@ -1045,8 +1032,7 @@ export default function App() {
     }, [selectedStyle, uploadedFiles]);
 
     const stylesRequiringDescription: (ContentStyle | null)[] = useMemo(() => [
-        'direct', 'quick_review', 'food_promo', 
-        'poster_food', 'poster_beauty', 'poster_tech', 'poster_property'
+        'direct', 'quick_review', 'food_promo'
     ], []);
     
     const stylesRequiringTravelDesc: (ContentStyle | null)[] = useMemo(() => ['travel', 'property'], []);
@@ -1079,7 +1065,7 @@ export default function App() {
                         <div className="text-left">
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1 tracking-wider ml-1">Kode Lisensi</label>
                             <div className="flex gap-2">
-                                <input ref={licenseInputRef} type="text" value={licenseInput} onChange={(e) => setLicenseInput(e.target.value)} placeholder="PRO-XXXX-XXXX" className="w-full text-center tracking-widest px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase font-mono" />
+                                <input ref={licenseInputRef} type="text" value={licenseInput} onChange={(e) => setLicenseInput(normalizeLicenseInput(e.target.value))} placeholder="PRO-XXXX-XXXX" className="w-full text-center tracking-widest px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase font-mono" />
                                 <button onClick={handlePasteLicense} className="bg-gray-100 px-4 rounded-xl hover:bg-gray-200 transition-colors text-gray-600" title="Paste"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg></button>
                             </div>
                         </div>
@@ -1130,7 +1116,7 @@ export default function App() {
                     
                     {/* 1. VIDEO STUDIO */}
                     <div className="space-y-1 mb-2">
-                        <button onClick={() => setIsVideoMenuOpen(!isVideoMenuOpen)} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all ${currentView === 'dashboard' && selectedStyle && !selectedStyle.startsWith('poster_') ? 'text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+                        <button onClick={() => setIsVideoMenuOpen(!isVideoMenuOpen)} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all ${currentView === 'dashboard' ? 'text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
                             <div className="flex items-center"><VideoIcon className="mr-3" /><span className="font-medium">Video Studio</span></div>
                             <ChevronDownIcon className={`transform transition-transform ${isVideoMenuOpen ? 'rotate-180' : ''}`} />
                         </button>
@@ -1146,26 +1132,8 @@ export default function App() {
                         )}
                     </div>
 
-                    {/* 2. POSTER MAKER (NEW) */}
-                    <div className="space-y-1 mb-2">
-                        <button onClick={() => setIsPosterMenuOpen(!isPosterMenuOpen)} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all ${currentView === 'dashboard' && selectedStyle && selectedStyle.startsWith('poster_') ? 'text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
-                            <div className="flex items-center"><CameraIcon className="mr-3" /><span className="font-medium">Poster Maker</span></div>
-                            <ChevronDownIcon className={`transform transition-transform ${isPosterMenuOpen ? 'rotate-180' : ''}`} />
-                        </button>
-                        {isPosterMenuOpen && (
-                            <div className="pl-6 space-y-1 animate-toastIn">
-                                {photoStyles.map((style) => (
-                                    <button key={style.id} onClick={() => handleStyleSelect(style.id)} className={`flex items-center w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${selectedStyle === style.id && currentView === 'dashboard' ? 'bg-purple-600/20 text-purple-300 border-l-2 border-purple-500' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/50'}`}>
-                                        <span className="opacity-70 group-hover:opacity-100 mr-2"><CameraIcon className="w-3 h-3"/></span>
-                                        {style.name}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
                     <div className="pt-4 mt-4 border-t border-gray-800">
-                         {/* 3. PROMPT LAB */}
+                         {/* 2. PROMPT LAB */}
                          <div className="space-y-1 mb-2">
                             <button onClick={() => setIsPromptLabMenuOpen(!isPromptLabMenuOpen)} className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all ${currentView === 'prompt_lab' ? 'text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
                                 <div className="flex items-center"><MagicIcon /><span className="font-medium">Prompt Lab</span></div>
@@ -1280,7 +1248,7 @@ export default function App() {
                                 <div className="space-y-4">
                                     {mainAssetConfig && <FileInput {...mainAssetConfig} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
                                     
-                                    {selectedStyle && !['aesthetic_hands_on'].includes(selectedStyle) && !selectedStyle.startsWith('poster_') && <FileInput id="model" label="Foto Model (Opsional)" files={uploadedFiles.model} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
+                                    {selectedStyle && !['aesthetic_hands_on'].includes(selectedStyle) && <FileInput id="model" label="Foto Model (Opsional)" files={uploadedFiles.model} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
                                     
                                     {selectedStyle && ['fashion_broll', 'treadmill_fashion_show', 'aesthetic_hands_on', 'food_promo'].includes(selectedStyle) && <FileInput id="background" label="Foto Latar (Opsional)" files={uploadedFiles.background} onFilesChange={handleFilesChange} onFileRemove={handleFileRemove} />}
                                     <hr className="border-gray-100 my-4"/>
@@ -1299,7 +1267,7 @@ export default function App() {
                                         </div>
                                         {showScriptSection && (
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-500 mb-1">{selectedStyle.startsWith('poster_') ? 'Gaya Copywriting' : 'Gaya Naskah'}</label>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">Gaya Naskah</label>
                                                 <select value={scriptStyle} onChange={e => setScriptStyle(e.target.value as ScriptStyle)} className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
                                                     {SCRIPT_STYLES.map(style => <option key={style.id} value={style.id}>{style.name}</option>)}
                                                 </select>
@@ -1310,18 +1278,15 @@ export default function App() {
                                         {stylesRequiringDescription.includes(selectedStyle) && (
                                             <div className="space-y-1">
                                                 <label className="block text-xs font-bold text-indigo-600 uppercase tracking-tight">
-                                                    {selectedStyle.startsWith('poster_') ? 'Instruksi Visual & Detail Produk' : 'Deskripsi Konten'}
+                                                    Deskripsi Konten
                                                 </label>
                                                 <textarea 
                                                     rows={3} 
                                                     value={description} 
                                                     onChange={e => setDescription(e.target.value)} 
                                                     className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
-                                                    placeholder={selectedStyle.startsWith('poster_') 
-                                                        ? "Cth: Tema musim panas, latar belakang biru cerah dengan dedaunan tropis, ada efek bulir air segar..." 
-                                                        : "Jelaskan produk anda..."}
+                                                    placeholder="Jelaskan produk anda..."
                                                 ></textarea>
-                                                {selectedStyle.startsWith('poster_') && <p className="text-[10px] text-gray-400 italic leading-tight">Berikan "Perintah" visual atau jelaskan detail produk Anda di sini.</p>}
                                             </div>
                                         )}
                                         {stylesRequiringTravelDesc.includes(selectedStyle) && <div className="space-y-1"><label className="block text-xs font-medium text-gray-500">Deskripsi Lokasi</label><textarea rows={3} value={travelDescription} onChange={e => setTravelDescription(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="Jelaskan lokasi/properti..."></textarea></div>}
@@ -1372,7 +1337,7 @@ export default function App() {
                                 {showScriptSection && generatedContent.tiktokScript && (
                                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h3 className="text-sm font-bold uppercase text-gray-700">{selectedStyle.startsWith('poster_') ? 'Tagline & Caption' : 'Naskah & Audio'}</h3>
+                                            <h3 className="text-sm font-bold uppercase text-gray-700">Naskah & Audio</h3>
                                             <div className="flex gap-2">
                                                 <select value={ttsVoice} onChange={e => setTtsVoice(e.target.value)} className="bg-gray-50 border border-gray-200 text-xs rounded-lg px-2 py-1 outline-none">{TTS_VOICES.map(voice => <option key={voice.value} value={voice.value}>{voice.label}</option>)}</select>
                                                 <button onClick={handleTts} disabled={isLoading} className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-1">{audioUrl ? <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg> : <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>} Generate Audio</button>

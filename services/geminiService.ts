@@ -124,7 +124,6 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
     `;
     let useGoogleSearch = false;
     
-    const isPosterMode = style.startsWith('poster_');
     const shots = (style === 'treadmill_fashion_show') 
         ? `1 shot base prompt` 
         : `${STORY_FLOWS[style].length} shots (${STORY_FLOWS[style].map(s => s.label).join(', ')})`;
@@ -133,7 +132,7 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
 
     // Improved Instruction for Visual Consistency (The Visual Anchor)
     const baseSystemInstruction = `
-        Anda adalah AI Creative Director. Tugas Anda adalah membuat rencana konten (storyboard atau poster set) untuk affiliate marketing.
+        Anda adalah AI Creative Director. Tugas Anda adalah membuat rencana konten storyboard untuk affiliate marketing.
         
         ${brandPersonaPrompt}
 
@@ -143,46 +142,7 @@ function buildCreativePlanPayload(style: ContentStyle, lang: string, description
         3.  Metadata 'keywords' (5-7 kata) & 'description' (judul pendek) harus dalam bahasa: ${lang}.
     `;
 
-    // --- POSTER LOGIC ---
-    if (isPosterMode) {
-        let posterVibe = "";
-        switch (style) {
-            case 'poster_food':
-                posterVibe = "Appetite Appeal, Fresh, Steam/Water Droplets, Warm Lighting, Delicious.";
-                break;
-            case 'poster_beauty':
-                posterVibe = "Elegant, Soft Lighting, Pastel Colors, Organic Textures (Water/Flowers), Pure.";
-                break;
-            case 'poster_tech':
-                posterVibe = "Futuristic, Neon Rim Light, Dark Background, Floating Product, Sleek.";
-                break;
-            case 'poster_property':
-                posterVibe = "Spacious, Natural Sunlight, Clean Lines, Cozy, Architectural Symmetry.";
-                break;
-        }
-
-        const systemInstruction = `${baseSystemInstruction}
-            GAYA: PHOTO STUDIO / POSTER MAKER (${posterVibe}).
-            
-            INSTRUKSI UTAMA (PRIORITAS USER):
-            1. **IKUTI PERINTAH USER:** Teks pada 'Instruksi Visual & Detail Produk' adalah Brief Kreatif. Jika user meminta "Background Biru" atau "Gaya Minimalis", Anda WAJIB menyertakan elemen tersebut di semua Shot Prompts.
-            2. **BACKGROUND BERSIH:** Pastikan prompt gambar meminta "Minimalist Background" dan "Negative Space" untuk penempatan teks.
-            3. **TAGLINE GENERATOR:** Di field 'tiktokScript', gunakan format:
-               "HEADLINE: [Tagline Catchy 3-5 Kata]
-                CAPTION: [Caption Instagram menarik]"
-            
-            INSTRUKSI SHOT PROMPTS (4 VARIASI):
-            1. **Hero Shot:** Produk di tengah, lighting dramatis, background bersih sesuai keinginan user.
-            2. **Lifestyle:** Produk di lingkungan natural (sesuai brief user).
-            3. **Creative:** Komposisi artistik (Floating, Flatlay, Geometris).
-            4. **Detail:** Close-up texture shot (Macro).
-            
-            Akhiri setiap prompt dengan: "${imageQualityPrompt}, ${posterVibe}, clean composition, negative space for text".
-        `;
-        return { systemInstruction, userQuery, useGoogleSearch };
-    }
-
-    // --- VIDEO LOGIC (EXISTING) ---
+    // --- VIDEO LOGIC ---
     let systemInstruction = "";
     switch (style) {
         case 'direct':
